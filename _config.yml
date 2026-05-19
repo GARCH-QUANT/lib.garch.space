@@ -37,7 +37,7 @@ collections:
   strategy:
     output: true
     permalink: /strategy/:path/
-  data:
+  datasets:
     output: true
     permalink: /data/:path/
 
