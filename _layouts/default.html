@@ -1,0 +1,45 @@
+---
+layout: nil
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if page.title %}<title>{{ page.title }} | {{ site.title }}</title>{% else %}<title>{{ site.title }}</title>{% endif %}
+  {% seo %}
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+  <link href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/copy-tex.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/img/favicon.svg' | relative_url }}">
+</head>
+<body class="wrap">
+  <div class="site-wrapper">
+    {% include sidebar.html %}
+    <main class="main-content" id="main-content">
+      <div class="content-wrapper">
+        {{ content }}
+      </div>
+    </main>
+  </div>
+  {% include footer.html %}
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/copy-tex.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\[', right: '\\]', display: true},
+          {left: '\\(', right: '\\)', display: false}
+        ],
+        throwOnError: false
+      });
+    });
+  </script>
+  {% if page.search == "exclude" %}{% else %}{% include search.html %}{% endif %}
+</body>
+</html>

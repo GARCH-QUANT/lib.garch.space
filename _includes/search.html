@@ -1,0 +1,22 @@
+<div class="search-wrapper" id="search-wrapper">
+  <input type="text" class="search-input" id="search-input" placeholder="搜索文档、论文、策略..." autocomplete="off">
+  <div class="search-results" id="search-results"></div>
+</div>
+<script>
+(function() {
+  var searchInput = document.getElementById('search-input');
+  var searchResults = document.getElementById('search-results');
+  var searchData = [];
+  fetch('/assets/js/search-index.json').then(r => r.json()).then(d => searchData = d);
+  searchInput.addEventListener('input', function() {
+    var q = this.value.trim();
+    if (q.length < 2) { searchResults.innerHTML = ''; return; }
+    var results = searchData.filter(function(item) {
+      return item.title.indexOf(q) >= 0 || item.content.indexOf(q) >= 0;
+    }).slice(0, 10);
+    searchResults.innerHTML = results.map(function(r) {
+      return '<a href="' + r.url + '" class="search-result-item"><span class="search-result-title">' + r.title + '</span><span class="search-result-category">' + r.category + '</span></a>';
+    }).join('');
+  });
+})();
+</script>
