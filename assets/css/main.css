@@ -32,6 +32,10 @@
   --cta-sub:   #E2D2A6;
 }
 
+/* ── Hamburger button — hidden on desktop (≤ 768px shows it) */
+.hamburger-btn { display: none; }
+.sidebar-overlay { display: none; }
+
 /* ============================================================
    GLOBAL RESET & BASE
    ============================================================ */
@@ -183,6 +187,9 @@ body {
   flex: 1;
   min-height: 100vh;
   padding: 48px 52px;
+  padding-bottom: 80px; /* breathing room above footer */
+  max-width: 1000px;
+  margin: 0 auto !important;
 }
 
 .content-wrapper { max-width: 860px; }
@@ -347,7 +354,7 @@ body {
   display: flex !important;
   min-height: 100vh;
   width: 100%;
-  align-items: flex-start; /* sidebar stays fixed-height, content grows */
+  align-items: flex-start;
 }
 
 /* Footer — always at bottom, full width, no offset */
@@ -360,7 +367,7 @@ body {
   padding: 24px 52px;
   font-size: 13px;
   color: var(--text-3);
-  flex-shrink: 0; /* never shrink */
+  flex-shrink: 0;
 }
 
 .footer-inner {
@@ -593,45 +600,303 @@ body {
 }
 
 /* ============================================================
-   9. RESPONSIVE — Mobile
+   9. RESPONSIVE — Mobile-First (≤ 768px)
+   PC styles above are fully preserved.
    ============================================================ */
+
 @media (max-width: 768px) {
-  body { flex-direction: column; }
 
-  .sidebar {
+  /* ── Global body reset on mobile ─────────────────────────── */
+  body {
+    flex-direction: column !important;
+    min-height: 100vh;
+  }
+
+  /* ── Hamburger button ────────────────────────────────────── */
+  .hamburger-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 9999;
+    width: 42px;
+    height: 42px;
+    background: #0A2463;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    transition: background 0.2s;
+  }
+  .hamburger-btn:hover { background: #0d2a5e; }
+
+  .hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 20px;
+  }
+  .hamburger-icon span {
+    display: block;
     width: 100%;
-    min-height: auto;
-    position: relative;
+    height: 2px;
+    background: #FFFFFF;
+    border-radius: 2px;
+    transition: transform 0.25s, opacity 0.25s;
+    transform-origin: center;
+  }
+  /* Open state — animate to × */
+  .hamburger-btn.is-open .hamburger-icon span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .hamburger-btn.is-open .hamburger-icon span:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger-btn.is-open .hamburger-icon span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
   }
 
+  /* ── Sidebar overlay backdrop ─────────────────────────────── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.overlay-visible {
+    display: block;
+  }
+
+  /* ── Sidebar — hidden off-screen by default ─────────────── */
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 280px !important;
+    min-height: 100vh !important;
+    height: 100%;
+    background: #0A2463 !important;
+    z-index: 300;
+    overflow-y: auto;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+  }
+  .sidebar.sidebar-open {
+    left: 0 !important;
+  }
+
+  /* Mobile sidebar typography — smaller, tighter */
+  .sidebar-header { padding: 20px 16px 14px; }
+  .logo-text { font-size: 20px; }
+  .logo-sub { font-size: 10px; }
+
+  .sidebar-nav { padding: 12px 0; }
+  .nav-section { padding: 8px 10px; }
+  .nav-section-title {
+    font-size: 11px !important;
+    letter-spacing: 1.5px !important;
+    margin-bottom: 6px !important;
+    margin-top: 12px !important;
+  }
+  .nav-list li { margin-bottom: 2px !important; }
+  .nav-link {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 6px 10px 6px 8px !important;
+  }
+
+  /* ── Main content ────────────────────────────────────────── */
   .main-content {
-    margin-left: 0;
-    padding: 24px 20px;
+    margin-left: 0 !important;
+    padding: 72px 18px 60px !important; /* room for hamburger at top */
+    max-width: 100% !important;
+    width: 100% !important;
   }
 
-  .catalog-grid { grid-template-columns: 1fr; }
+  .content-wrapper { max-width: 100%; }
 
-  .hero-stats { gap: 24px; }
+  /* ── Hero ────────────────────────────────────────────────── */
+  .hero { padding: 28px 0 16px; }
+  .hero-badge { font-size: 11px; margin-bottom: 12px; }
+  .hero-title { font-size: 30px !important; line-height: 1.25; }
+  .hero-subtitle { font-size: 15px !important; margin-bottom: 20px; }
+  .hero-stats {
+    gap: 20px !important;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .stat-num { font-size: 26px !important; }
+  .stat-label { font-size: 12px; }
 
-  .hero-title { font-size: 34px; }
+  /* ── Section headings ────────────────────────────────────── */
+  .section-heading { font-size: 18px !important; }
+  .section-body { font-size: 15px !important; }
 
-  .collection-grid { grid-template-columns: 1fr; }
+  /* ── Catalog grid — single column ────────────────────────── */
+  .catalog-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
 
-  /* Ensure sidebar text stays crisp on mobile */
-  .nav-link { font-size: 15px; padding: 8px 12px; }
+  /* ── Catalog card — full width, auto height ──────────────── */
+  .catalog-card {
+    padding: 16px !important;
+    min-height: unset !important;
+    height: auto !important;
+  }
+  .catalog-icon { font-size: 24px; margin-bottom: 8px; }
+  .catalog-title { font-size: 16px !important; }
+  .catalog-desc { font-size: 13px !important; }
+  .catalog-sub li { font-size: 12px !important; }
+  .catalog-link { font-size: 13px !important; padding: 7px 14px !important; }
 
+  /* ── Collection grid — single column ─────────────────────── */
+  .collection-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .col-card { padding: 16px !important; }
+  .col-card h2 { font-size: 15px !important; }
+  .col-card li { font-size: 13px !important; }
+
+  /* ── Page content typography ─────────────────────────────── */
+  .page-title { font-size: 22px !important; }
+  .page-abstract { font-size: 14px !important; }
   .page-content p,
-  .page-content li { font-size: 15px; }
+  .page-content li { font-size: 15px !important; line-height: 1.75; }
+  .page-content h1 { font-size: 22px !important; }
+  .page-content h2 { font-size: 18px !important; }
+  .page-content h3 { font-size: 16px !important; }
+  .page-content pre {
+    font-size: 12px !important;
+    padding: 12px !important;
+    border-radius: 6px !important;
+    overflow-x: auto;
+  }
+  .page-content table { font-size: 13px !important; }
+  .page-content th,
+  .page-content td { padding: 8px 10px !important; }
 
-  .page-title { font-size: 24px; }
+  /* ── KaTeX math — mobile-safe, no overflow ───────────────── */
+  .katex { font-size: 1em !important; }
+  .katex-display {
+    margin: 14px 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100vw;
+    padding: 4px 0;
+    /* Allow slight horizontal scroll for wide formulas */
+  }
+  .katex-display > .katex {
+    display: block !important;
+    text-align: left !important;
+  }
 
-  .section-heading { font-size: 19px; }
+  /* ── CTA section ────────────────────────────────────────── */
+  .cta-section { padding: 22px 16px !important; }
+  .cta-text { font-size: 16px !important; }
+  .cta-sub { font-size: 12px !important; }
+
+  /* ── Search ──────────────────────────────────────────────── */
+  .search-wrapper { padding: 16px 18px 0 !important; }
+  .search-input { font-size: 14px !important; padding: 10px 14px !important; }
+
+  /* ── Back home button — larger touch target ─────────────── */
+  .back-home-btn { font-size: 15px !important; padding: 10px 16px !important; }
+
+  /* ── Footer — centered, full width ──────────────────────── */
+  .site-footer {
+    padding: 18px 18px !important;
+    font-size: 12px !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    flex-direction: column !important;
+    gap: 4px;
+  }
+
+  /* ── Tech grid ───────────────────────────────────────────── */
+  .tech-grid { gap: 10px !important; }
+  .tech-item { padding: 6px 12px !important; font-size: 13px !important; }
 }
 
+/* ── Small phones (≤ 480px) — extra tight ────────────────── */
 @media (max-width: 480px) {
-  .hero-title { font-size: 28px; }
-  .stat-num { font-size: 26px; }
-  .catalog-card { padding: 18px; }
+  .hero-title { font-size: 26px !important; }
+  .stat-num { font-size: 22px !important; }
+  .catalog-card { padding: 14px !important; }
+  .main-content { padding: 68px 14px 50px !important; }
+  .page-title { font-size: 20px !important; }
+}
+
+/* ========== 移动端侧边栏终极收尾（≤ 768px） ========== */
+@media (max-width: 768px) {
+
+  /* 侧边栏宽度 & 滚动优化 */
+  .sidebar {
+    width: 70vw !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    top: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 侧边分类标题 — 哑光金加粗，字间距微调 */
+  .sidebar .nav-section-title {
+    color: #C8A951 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
+    margin: 22px 0 10px 0 !important;
+  }
+
+  /* 侧边导航文字 — 纯白行高锁定，hover 金色 */
+  .sidebar .nav-link {
+    color: #FFFFFF !important;
+    line-height: 1.7 !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+  }
+  .sidebar .nav-link:hover {
+    color: #C8A951 !important;
+  }
+
+  /* 遮罩交互优化 */
+  #sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,30,0.55);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+  }
+  .sidebar-overlay.overlay-visible {
+    display: block;
+  }
+
+  /* 主内容彻底防挤压 */
+  .main-content {
+    margin-left: 0 !important;
+    transform: none !important;
+    padding-bottom: 120px !important;
+    min-height: 100dvh;
+  }
+
+  /* 适配手机底部导航栏，杜绝内容遮挡 */
+  html, body {
+    height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* 数字统计排版居中对齐 */
+  .hero-stats {
+    justify-content: center !important;
+    gap: 30px !important;
+  }
+
 }
 
 /* ============================================================
