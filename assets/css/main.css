@@ -83,17 +83,20 @@ body {
 /* Navigation */
 .sidebar-nav { padding: 16px 0; }
 
-.nav-section { padding: 12px 20px; }
+.nav-section { padding: 12px 12px 12px 12px; }
 
-/* Category titles — 哑光金 #C8A951 bold */
+/* Category titles — 哑光金 #C8A951 bold, larger + breathing room */
 .nav-section-title {
-  font-size: 11px;
-  letter-spacing: 1.5px;
+  font-size: 13px !important;
+  letter-spacing: 2px !important;
   text-transform: uppercase;
-  color: #C8A951;
-  margin-bottom: 10px;
-  font-weight: 700;        /* bold */
+  color: #C8A951 !important;
+  margin-bottom: 10px !important;
+  margin-top: 18px !important;
+  font-weight: 700 !important;
 }
+/* First section — no extra top margin needed */
+.nav-section:first-child .nav-section-title { margin-top: 0 !important; }
 
 /* ============================================================
    1. SIDEBAR NAVIGATION — FORCE OVERRIDE (HIGHEST PRIORITY)
@@ -102,7 +105,7 @@ body {
 
 /* Base nav list */
 .nav-list { list-style: none !important; padding: 0 !important; margin: 0 !important; }
-.nav-list li { margin-bottom: 2px !important; list-style: none !important; }
+.nav-list li { margin-bottom: 4px !important; list-style: none !important; }
 
 /* Every anchor inside the sidebar — pure white, no blue, no purple */
 .sidebar a,
@@ -136,8 +139,9 @@ body {
 .nav-link {
   color: #FFFFFF !important;
   text-decoration: none !important;
-  font-size: 14px !important;
-  padding: 6px 10px !important;
+  font-size: 15px !important;
+  line-height: 1.8 !important;
+  padding: 5px 10px 5px 8px !important;
   border-radius: 5px !important;
   display: block !important;
   transition: background 0.2s, color 0.15s !important;
@@ -147,9 +151,19 @@ body {
   box-shadow: none !important;
 }
 
+/* Hover — 哑光金 background strip */
 .nav-link:hover {
-  background: rgba(200, 169, 81, 0.28) !important;
+  background: rgba(200, 169, 81, 0.25) !important;
   color: #C8A951 !important;
+}
+
+/* Active/current page — subtle left gold border */
+.nav-link.active,
+.nav-link[aria-current="page"] {
+  background: rgba(200, 169, 81, 0.15) !important;
+  color: #C8A951 !important;
+  border-left: 3px solid #C8A951 !important;
+  padding-left: 5px !important;
 }
 
 .nav-link:visited {
