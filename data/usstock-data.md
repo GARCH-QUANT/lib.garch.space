@@ -1,4 +1,5 @@
 ---
+permalink: /data/usstock-data/
 title: usstock-data
 author: GARCH Quant Research
 date: 2024-03-01

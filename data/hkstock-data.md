@@ -1,4 +1,5 @@
 ---
+permalink: /data/hkstock-data/
 title: hkstock-data
 author: GARCH Quant Research
 date: 2024-03-01

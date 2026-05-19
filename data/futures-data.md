@@ -1,4 +1,5 @@
 ---
+permalink: /data/futures-data/
 title: futures-data
 author: GARCH Quant Research
 date: 2024-03-01

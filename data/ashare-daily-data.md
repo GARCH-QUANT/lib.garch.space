@@ -1,4 +1,5 @@
 ---
+permalink: /data/ashare-daily-data/
 title: ashare-daily-data
 author: GARCH Quant Research
 date: 2024-03-01
