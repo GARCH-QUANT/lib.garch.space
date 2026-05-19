@@ -92,25 +92,70 @@ body {
   font-weight: 700;        /* bold */
 }
 
-/* Nav links — pure white #FFFFFF */
-.nav-list { list-style: none; }
-.nav-list li { margin-bottom: 2px; }
+/* ============================================================
+   1. SIDEBAR NAVIGATION — FORCE OVERRIDE (HIGHEST PRIORITY)
+   !important on every property — no browser default can win
+   ============================================================ */
 
-.nav-link {
-  color: #FFFFFF;          /* was rgba(255,255,255,0.8) — insufficient */
-  text-decoration: none;
-  font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 5px;
-  display: block;
-  transition: background 0.2s, color 0.2s;
-  font-weight: 400;
+/* Base nav list */
+.nav-list { list-style: none !important; padding: 0 !important; margin: 0 !important; }
+.nav-list li { margin-bottom: 2px !important; list-style: none !important; }
+
+/* Every anchor inside the sidebar — pure white, no blue, no purple */
+.sidebar a,
+.sidebar a:link,
+.sidebar a:visited,
+.sidebar a:hover,
+.sidebar a:focus,
+.sidebar a:active {
+  color: #FFFFFF !important;
+  text-decoration: none !important;
+  text-underline-offset: unset !important;
+  text-decoration-color: transparent !important;
 }
 
+/* Unvisited — pure white */
+.sidebar a:link { color: #FFFFFF !important; }
+
+/* Visited — keep white, NO browser-default purple */
+.sidebar a:visited { color: #FFFFFF !important; }
+
 /* Hover — 哑光金 #C8A951 */
+.sidebar a:hover { color: #C8A951 !important; }
+
+/* Focus — same as hover, accessibility */
+.sidebar a:focus { color: #C8A951 !important; outline: 2px solid #C8A951 !important; outline-offset: 2px !important; }
+
+/* Active — gold on click */
+.sidebar a:active { color: #C8A951 !important; }
+
+/* .nav-link — the actual nav link class */
+.nav-link {
+  color: #FFFFFF !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  padding: 6px 10px !important;
+  border-radius: 5px !important;
+  display: block !important;
+  transition: background 0.2s, color 0.15s !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .nav-link:hover {
-  background: rgba(200, 169, 81, 0.25);
-  color: #C8A951;
+  background: rgba(200, 169, 81, 0.28) !important;
+  color: #C8A951 !important;
+}
+
+.nav-link:visited {
+  color: #FFFFFF !important;
+}
+
+.nav-link:focus {
+  color: #C8A951 !important;
+  outline: none !important;
 }
 
 /* ============================================================
