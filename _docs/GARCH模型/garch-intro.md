@@ -1,5 +1,5 @@
 ---
-title: GARCH模型入门
+title: garch-intro
 author: GARCH Quant Research
 date: 2024-01-20
 category: GARCH模型
@@ -7,7 +7,7 @@ tags: [GARCH, 波动率模型, 条件异方差, Bollerslev]
 abstract: 介绍 GARCH(p,q) 模型的基本结构、参数估计方法及在金融时间序列中的应用，包含条件方差方程与均值方程的联合建模框架。
 ---
 
-# GARCH模型入门
+# garch-intro
 
 ## 1. 模型背景
 

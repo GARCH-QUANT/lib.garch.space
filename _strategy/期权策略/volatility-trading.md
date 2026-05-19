@@ -1,5 +1,5 @@
 ---
-title: 波动率交易框架
+title: volatility-trading
 author: GARCH Quant Research
 date: 2024-04-10
 category: 期权策略
@@ -7,14 +7,15 @@ tags: [波动率交易, VIX, Greeks, Gamma Scalping, Variance Swap, 期权策略
 abstract: 系统梳理波动率交易的核心框架，涵盖VIX指数与波动率曲面、Black-Scholes与Greeks对冲、Gamma/Theta交换机制、Variance Swap定价及波动率ETF（VXX/UVXY）交易逻辑。
 ---
 
-# 波动率交易框架
+# volatility-trading
 
 ## 1. VIX 指数
 
 ### 计算方法
 VIX（CBOE Volatility Index）通过一系列标普500期权加权计算隐含波动率：
 
-$$VIX^2 = rac{2}{T} \sum_i rac{\Delta K_i}{K_i^2} e^{RT} Q(K_i) - rac{1}{T}\left(rac{F}{K_0} - 1ight)^2$$
+$$VIX^2 = rac{2}{T} \sum_i rac{\Delta K_i}{K_i^2} e^{RT} Q(K_i) - rac{1}{T}\left(rac{F}{K_0} - 1
+ight)^2$$
 
 - $T$：到期时间（分钟）
 - $K_i$：执行价
@@ -96,7 +97,8 @@ $$P\&L_{	ext{Gamma}} pprox rac{1}{2} \Gamma \cdot (\Delta S)^2 - \Theta \cdot 
 $$P\&L = N \cdot (N^{-1}(K_{var}) - \sigma_{real}^2)$$
 
 实际方差：
-$$\sigma_{real}^2 = rac{252}{n} \sum_{i=1}^{n} \left(\lnrac{S_i}{S_{i-1}}ight)^2$$
+$$\sigma_{real}^2 = rac{252}{n} \sum_{i=1}^{n} \left(\lnrac{S_i}{S_{i-1}}
+ight)^2$$
 
 ## 5. 波动率ETF（VIX ETP）
 

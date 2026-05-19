@@ -1,5 +1,5 @@
 ---
-title: 趋势跟踪系统设计
+title: trend-following-system
 author: GARCH Quant Research
 date: 2024-04-20
 category: 趋势跟踪
@@ -7,7 +7,7 @@ tags: [趋势跟踪, CTA, 均线系统, 动量策略, 海龟交易法则, 回撤
 abstract: 系统梳理趋势跟踪策略的设计框架，涵盖经典均线系统、均线交叉、ATR仓位管理、海龟交易法则，以及趋势策略在商品、债券、股票、外汇多资产中的应用。
 ---
 
-# 趋势跟踪系统设计
+# trend-following-system
 
 ## 1. 趋势跟踪理论基础
 

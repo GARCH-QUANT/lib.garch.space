@@ -1,13 +1,13 @@
 ---
-title: Fama-French三因子模型
+title: fama-french-three-factor
 author: GARCH Quant Research
 date: 2024-02-10
 category: 多因子
 tags: [多因子, CAPM, Fama-French, 因子暴露, 风险溢价]
-abstract: 介绍Fama-French三因子模型的构建逻辑、因子定义、回测方法及在A股市场的适用性改进。
+abstract: 介绍fama-french-three-factor的构建逻辑、因子定义、回测方法及在A股市场的适用性改进。
 ---
 
-# Fama-French三因子模型
+# fama-french-three-factor
 
 ## 1. 模型背景
 

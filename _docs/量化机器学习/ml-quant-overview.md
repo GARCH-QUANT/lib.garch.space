@@ -1,5 +1,5 @@
 ---
-title: 量化机器学习综述
+title: ml-quant-overview
 author: GARCH Quant Research
 date: 2024-02-01
 category: 量化机器学习
@@ -7,7 +7,7 @@ tags: [机器学习, 因子挖掘, LightGBM, 深度学习, 量化策略]
 abstract: 综述机器学习在量化投资中的应用，涵盖因子挖掘与选择、模型训练与过拟合防控、回测机制与样本外检验，以及前沿深度学习时序方法（Transformer、LSTM、图神经网络）。
 ---
 
-# 量化机器学习综述
+# ml-quant-overview
 
 ## 1. 机器学习量化应用的完整流程
 

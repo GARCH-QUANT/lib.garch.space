@@ -1,5 +1,5 @@
 ---
-title: A股日频行情数据集说明
+title: ashare-daily-data
 author: GARCH Quant Research
 date: 2024-03-01
 category: A股数据
@@ -7,7 +7,7 @@ tags: [A股, 日频数据, Tushare, Baostock, 行情数据]
 abstract: 介绍A股日频行情数据集的字段结构、数据源、更新频率及获取方式。
 ---
 
-# A股日频行情数据集说明
+# ashare-daily-data
 
 ## 1. 数据源
 

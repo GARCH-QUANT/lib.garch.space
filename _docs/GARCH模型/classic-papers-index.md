@@ -1,5 +1,5 @@
 ---
-title: GARCH 族模型经典文献索引
+title: GARCH 族模型classic-papers-index
 author: GARCH Quant Research
 date: 2024-01-01
 category: GARCH模型
@@ -7,7 +7,7 @@ tags: [GARCH, ARCH, 文献索引, 波动率模型, 参考书]
 abstract: 收录 GARCH 族模型从 ARCH 到前沿高阶模型的全部核心文献索引，涵盖条件异方差理论基础、多元 GARCH、已实现波动率、GARCH 期权定价等方向，是量化波动率研究的核心文献地图。
 ---
 
-# GARCH 族模型经典文献索引
+# GARCH 族模型classic-papers-index
 
 > 本索引收录波动率建模领域从 1982 年至今的代表性学术文献，按主题分类整理。所有文献均可通过 SSRN、Google Scholar 或对应出版社获取原始 PDF。
 

@@ -1,5 +1,5 @@
 ---
-title: AI算力产业链研究框架
+title: ai-compute-chain
 author: GARCH Quant Research
 date: 2024-02-01
 category: AI算力投研
@@ -7,7 +7,7 @@ tags: [AI, 算力, 半导体, 数据中心, GPU]
 abstract: 构建AI算力产业链从上至下的研究框架，涵盖GPU制造、服务器组装、数据中心运营、算力租赁等环节的盈利模式、竞争格局与估值方法。
 ---
 
-# AI算力产业链研究框架
+# ai-compute-chain
 
 ## 1. 产业链结构
 

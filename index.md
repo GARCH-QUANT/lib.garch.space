@@ -41,7 +41,7 @@ search: exclude
         <h3 class="catalog-title">研究文档</h3>
         <p class="catalog-desc">数理基础 · 时序分析 · GARCH模型 · 量化机器学习 · 交易风控</p>
         <ul class="catalog-sub">
-          <li>概率统计基础与极值理论</li>
+          <li>probability-statistics-basics与极值理论</li>
           <li>时间序列 ARMA / 协整 / VEC 模型</li>
           <li>GARCH 族模型（经典/非对称/多元/Realized）</li>
           <li>机器学习因子挖掘与过拟合防控</li>
@@ -75,7 +75,7 @@ search: exclude
         <ul class="catalog-sub">
           <li>Fama-French 多因子与 Barra 风险模型</li>
           <li>海龟交易法则与 ATR 仓位管理系统</li>
-          <li>波动率交易框架（Gamma Scalping / Variance Swap）</li>
+          <li>volatility-trading（Gamma Scalping / Variance Swap）</li>
           <li>统计套利、期现套利与 ETF 套利</li>
           <li>期权希腊字母（Greeks）对冲与波动率曲面</li>
         </ul>

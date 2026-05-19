@@ -1,5 +1,5 @@
 ---
-title: 概率统计基础
+title: probability-statistics-basics
 author: GARCH Quant Research
 date: 2024-01-15
 category: 数理基础
@@ -7,7 +7,7 @@ tags: [概率论, 统计学, 金融数学]
 abstract: 量化金融研究的数理基础，涵盖概率分布、统计推断、极值理论等核心概念，为后续 GARCH 模型学习奠定基础。
 ---
 
-# 概率统计基础
+# probability-statistics-basics
 
 ## 1. 随机变量与概率分布
 

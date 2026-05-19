@@ -1,5 +1,5 @@
 ---
-title: 概率统计进阶
+title: probability-statistics-advanced
 author: GARCH Quant Research
 date: 2024-01-12
 category: 数理基础
@@ -7,7 +7,7 @@ tags: [概率论, 统计推断, 极大似然, 极值理论, 稳定分布]
 abstract: 量化研究必需的数理统计知识，涵盖多元正态分布、极值理论、稳定分布、Copula相依结构、极大似然估计的渐近理论，为波动率建模和风险度量提供数学基础。
 ---
 
-# 概率统计进阶
+# probability-statistics-advanced
 
 ## 1. 多元正态分布
 

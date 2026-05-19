@@ -1,5 +1,5 @@
 ---
-title: 时间序列分析基础
+title: time-series-basics
 author: GARCH Quant Research
 date: 2024-01-10
 category: 时序分析
@@ -7,7 +7,7 @@ tags: [时间序列, ARMA, 协整, 随机过程, 单位根]
 abstract: 时间序列分析的核心理论框架，涵盖平稳性检验、ARMA建模、协整理论与向量误差修正模型，为后续GARCH和多元时间序列分析奠定基础。
 ---
 
-# 时间序列分析基础
+# time-series-basics
 
 ## 1. 随机过程与平稳性
 

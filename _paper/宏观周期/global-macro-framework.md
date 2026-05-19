@@ -1,5 +1,5 @@
 ---
-title: 全球宏观周期研究框架
+title: global-macro-framework
 author: GARCH Quant Research
 date: 2024-03-01
 category: 宏观周期
@@ -7,7 +7,7 @@ tags: [宏观周期, 利率, 信用利差, 美林时钟, 全球资产配置, 美
 abstract: 构建全球宏观周期的研究框架，涵盖美林投资时钟、货币信用周期、信用利差与国债利差分析、美元周期与新兴市场联动，以及宏观因子在跨资产配置中的应用。
 ---
 
-# 全球宏观周期研究框架
+# global-macro-framework
 
 ## 1. 美林投资时钟
 
