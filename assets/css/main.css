@@ -633,3 +633,49 @@ body {
   .stat-num { font-size: 26px; }
   .catalog-card { padding: 18px; }
 }
+
+/* ============================================================
+   BACK HOME BUTTON — appears on all doc/paper/strategy/data pages
+   ============================================================ */
+.back-home-btn {
+  display: inline-block !important;
+  margin-bottom: 24px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #0A2463 !important;
+  text-decoration: none !important;
+  transition: color 0.2s ease, transform 0.15s ease !important;
+  letter-spacing: 0.2px !important;
+}
+.back-home-btn:hover {
+  color: #C8A951 !important;
+  transform: translateX(-3px); /* subtle leftward nudge */
+}
+.back-home-btn:visited {
+  color: #0A2463 !important;
+}
+
+/* ============================================================
+   KATEX FORMULA RENDERING — fix wrap, spacing, size
+   ============================================================ */
+/* Prevent inline math from overflowing narrow screens */
+.katex { font-size: 1.1em !important; }
+
+/* Display math blocks — extra vertical breathing room */
+.katex-display {
+  margin: 18px 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 0;
+}
+
+/* Inline math — comfortable gap from surrounding text */
+.katex-display + p,
+p + .katex-display,
+.katex-inline {
+  margin-top: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+/* Fix table cell math */
+td .katex { font-size: 1em !important; }
