@@ -21,7 +21,6 @@ kramdown:
   toc_levels: 1..6
 
 plugins:
-  - jekyll-include-cache
   - jekyll-seo-tag
   - jekyll-sitemap
   - github-pages
