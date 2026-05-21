@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⑥ 基金净值收益率批量处理器 | GARCH ToolBox</title>
+  <meta name="description" content="批量计算净值序列收益率、年化收益、最大回撤、波动率">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">Σ</span>
+        <span class="logo-text">GARCH <span class="logo-accent">ToolBox</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">首页</a>
+        <a href="/tools/" class="nav-link active">工具列表</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="切换主题"><span class="theme-icon">◐</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="tool-page">
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">⑥ 基金净值收益率批量处理器</h1>
+      <p class="tool-page-sub">批量计算净值序列收益率、年化收益、最大回撤、波动率</p>
+    </div>
+    <div class="tool-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">计算周期</label>
+          <input type="text" class="form-input" id="param1" value="日频" placeholder="日频 / 周频 / 月频">
+        </div>
+        <div class="form-group">
+          <label class="form-label">无风险利率 %</label>
+          <input type="text" class="form-input" id="param2" value="3" placeholder="3">
+        </div>
+        <div class="form-group">
+          <label class="form-label">最大回撤阈值 %</label>
+          <input type="text" class="form-input" id="param3" value="20" placeholder="20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">波动率上限 %</label>
+          <input type="text" class="form-input" id="param4" value="25" placeholder="25">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">基金净值序列</label>
+          <textarea class="form-textarea" id="dataInput" placeholder="1.00,1.02,0.98,1.05,1.08">1.000,1.015,1.030,1.025,1.050,1.070,1.060,1.080</textarea>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calculate()">运行计算</button>
+      <div class="result-box" id="resultBox">
+        <div class="result-label">计算结果</div>
+        <div class="result-value" id="resultValue">—</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-copy">© 2026 GARCH QUANT | Quantitative Financial Tool Platform</p>
+      <p class="footer-author">Fuli Yang, Ph.D.</p>
+    </div>
+  </footer>
+  <script src="/assets/js/theme.js"></script>
+  <script>
+  function calculate() {
+    var p1 = document.getElementById('param1').value;
+    var p2 = document.getElementById('param2').value;
+    var p3 = document.getElementById('param3').value;
+    var p4 = document.getElementById('param4').value;
+    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    document.getElementById('resultBox').classList.add('show');
+  }
+  </script>
+</body>
+</html>

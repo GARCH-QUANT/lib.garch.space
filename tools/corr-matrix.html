@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⑪ 多资产相关性矩阵分析工具 | GARCH ToolBox</title>
+  <meta name="description" content="Pearson / Spearman / Kendall 相关矩阵，热力图可视化">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">Σ</span>
+        <span class="logo-text">GARCH <span class="logo-accent">ToolBox</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">首页</a>
+        <a href="/tools/" class="nav-link active">工具列表</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="切换主题"><span class="theme-icon">◐</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="tool-page">
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">⑪ 多资产相关性矩阵分析工具</h1>
+      <p class="tool-page-sub">Pearson / Spearman / Kendall 相关矩阵，热力图可视化</p>
+    </div>
+    <div class="tool-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">资产数量 N</label>
+          <input type="text" class="form-input" id="param1" value="4" placeholder="2~20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">方法</label>
+          <input type="text" class="form-input" id="param2" value="pearson" placeholder="pearson / spearman / kendall">
+        </div>
+        <div class="form-group">
+          <label class="form-label">序列长度</label>
+          <input type="text" class="form-input" id="param3" value="252" placeholder="252">
+        </div>
+        <div class="form-group">
+          <label class="form-label">随机种子</label>
+          <input type="text" class="form-input" id="param4" value="123" placeholder="123">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">资产价格/收益率序列 (逗号分隔)</label>
+          <textarea class="form-textarea" id="dataInput" placeholder="逗号分隔的多个序列">0.012,-0.008,0.015,-0.005,0.020
+0.010,-0.005,0.020,-0.010,0.015
+0.008,-0.012,0.005,0.015,-0.008
+0.015,-0.003,0.010,-0.005,0.012</textarea>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calculate()">运行计算</button>
+      <div class="result-box" id="resultBox">
+        <div class="result-label">计算结果</div>
+        <div class="result-value" id="resultValue">—</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-copy">© 2026 GARCH QUANT | Quantitative Financial Tool Platform</p>
+      <p class="footer-author">Fuli Yang, Ph.D.</p>
+    </div>
+  </footer>
+  <script src="/assets/js/theme.js"></script>
+  <script>
+  function calculate() {
+    var p1 = document.getElementById('param1').value;
+    var p2 = document.getElementById('param2').value;
+    var p3 = document.getElementById('param3').value;
+    var p4 = document.getElementById('param4').value;
+    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    document.getElementById('resultBox').classList.add('show');
+  }
+  </script>
+</body>
+</html>

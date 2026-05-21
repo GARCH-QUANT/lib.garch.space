@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具列表 | GARCH ToolBox</title>
+  <meta name="description" content="专注GARCH族模型、Copula建模、量化风控、时间序列分析专业工具平台">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">Σ</span>
+        <span class="logo-text">GARCH <span class="logo-accent">ToolBox</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">首页</a>
+        <a href="/tools/" class="nav-link active">工具列表</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+          <span class="theme-icon">◐</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:3rem;">
+    <div class="container">
+      <h2 class="section-title">16 款量化专业工具</h2>
+      <p class="section-desc">覆盖波动率建模、风险测算、组合优化、时序分析全品类</p>
+      <div class="tools-grid">
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">01</span>
+            <h3>Copula-GARCH 波动率模拟器</h3>
+          </div>
+          <p class="tool-card-desc">基于 Copula 函数构建多维联合分布，模拟资产波动率路径</p>
+          <a href="/tools/copula-garch.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">02</span>
+            <h3>GARCH-VaR/CVaR 风险价值计算器</h3>
+          </div>
+          <p class="tool-card-desc">GARCH(1,1) 条件方差估计，计算单资产/组合 VaR 与 CVaR</p>
+          <a href="/tools/garch-var.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">03</span>
+            <h3>多维 Copula 相关性拟合分析器</h3>
+          </div>
+          <p class="tool-card-desc">Gaussian / Student-t / Clayton / Gumbel Copula 拟合与相关性度量</p>
+          <a href="/tools/copula-corr.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">04</span>
+            <h3>策略回测绩效校验工具</h3>
+          </div>
+          <p class="tool-card-desc">收益率曲线、胜率、夏普比率、最大回撤、卡玛比率综合评估</p>
+          <a href="/tools/backtest.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">05</span>
+            <h3>投资组合风险优化配置器</h3>
+          </div>
+          <p class="tool-card-desc">均值-CVaR 优化、Black-Litterman 逆向优化、最小方差组合</p>
+          <a href="/tools/portfolio-opt.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">06</span>
+            <h3>基金净值收益率批量处理器</h3>
+          </div>
+          <p class="tool-card-desc">批量计算净值序列收益率、年化收益、最大回撤、波动率</p>
+          <a href="/tools/fund-return.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">07</span>
+            <h3>金融厚尾分布拟合工具</h3>
+          </div>
+          <p class="tool-card-desc">t 分布 / GED 分布参数估计，Kolmogorov-Smirnov 拟合优度检验</p>
+          <a href="/tools/dist-fit.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">08</span>
+            <h3>EGARCH/GJR 非对称波动率模型</h3>
+          </div>
+          <p class="tool-card-desc">杠杆效应识别、新闻影响曲线、波动率非对称性量化分析</p>
+          <a href="/tools/egarch.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">09</span>
+            <h3>均值方差有效前沿生成器</h3>
+          </div>
+          <p class="tool-card-desc">Markowitz 有效前沿可视化、资本配置线、夏普最优点标记</p>
+          <a href="/tools/efficient-frontier.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">10</span>
+            <h3>量化绩效比率计算器</h3>
+          </div>
+          <p class="tool-card-desc">夏普比率、卡玛比率、索提诺比率、Sortino 比率批量计算</p>
+          <a href="/tools/performance.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">11</span>
+            <h3>多资产相关性矩阵分析工具</h3>
+          </div>
+          <p class="tool-card-desc">Pearson / Spearman / Kendall 相关矩阵，热力图可视化</p>
+          <a href="/tools/corr-matrix.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">12</span>
+            <h3>时间序列 ADF/KPSS 平稳性检验</h3>
+          </div>
+          <p class="tool-card-desc">ADF 检验、KPSS 检验、PP 检验，综合判断序列平稳性</p>
+          <a href="/tools/adf-kpss.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">13</span>
+            <h3>蒙特卡洛模拟金融风险测算</h3>
+          </div>
+          <p class="tool-card-desc">几何布朗运动 / 跳跃扩散路径模拟，概率分布与 VaR 估算</p>
+          <a href="/tools/monte-carlo.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">14</span>
+            <h3>Fama-French 多因子收益分解工具</h3>
+          </div>
+          <p class="tool-card-desc">三因子/五因子模型截面回归，Alpha 与因子暴露度量化</p>
+          <a href="/tools/fama-french.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">15</span>
+            <h3>年化收益&回撤快捷计算器</h3>
+          </div>
+          <p class="tool-card-desc">CAGR、年化波动率、最大回撤、Calmar 比率一键计算</p>
+          <a href="/tools/return-drawdown.html" class="btn-outline">打开工具</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-card-header">
+            <span class="tool-num">16</span>
+            <h3>波动率聚类特征识别工具</h3>
+          </div>
+          <p class="tool-card-desc">BDS 检验、波动率聚集效应量化、ARCH LM 检验</p>
+          <a href="/tools/vol-clustering.html" class="btn-outline">打开工具</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-copy">© 2026 GARCH QUANT | Quantitative Financial Tool Platform</p>
+      <p class="footer-author">Fuli Yang, Ph.D.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/theme.js"></script>
+</body>
+</html>

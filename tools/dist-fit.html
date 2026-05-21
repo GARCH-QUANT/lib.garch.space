@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⑦ 金融厚尾分布拟合工具 | GARCH ToolBox</title>
+  <meta name="description" content="t 分布 / GED 分布参数估计，Kolmogorov-Smirnov 拟合优度检验">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">Σ</span>
+        <span class="logo-text">GARCH <span class="logo-accent">ToolBox</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">首页</a>
+        <a href="/tools/" class="nav-link active">工具列表</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="切换主题"><span class="theme-icon">◐</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="tool-page">
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">⑦ 金融厚尾分布拟合工具</h1>
+      <p class="tool-page-sub">t 分布 / GED 分布参数估计，Kolmogorov-Smirnov 拟合优度检验</p>
+    </div>
+    <div class="tool-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">分布类型</label>
+          <input type="text" class="form-input" id="param1" value="t" placeholder="t / ged / normal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">自由度 ν</label>
+          <input type="text" class="form-input" id="param2" value="6" placeholder=">2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">位置参数 μ</label>
+          <input type="text" class="form-input" id="param3" value="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">尺度参数 σ</label>
+          <input type="text" class="form-input" id="param4" value="1" placeholder="1">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">样本数据序列</label>
+          <textarea class="form-textarea" id="dataInput" placeholder="0.5,-1.2,0.8,-0.3,2.1,...">0.5,-1.2,0.8,-0.3,2.1,1.5,-0.8,0.2,1.8,-0.6</textarea>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="calculate()">运行计算</button>
+      <div class="result-box" id="resultBox">
+        <div class="result-label">计算结果</div>
+        <div class="result-value" id="resultValue">—</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-copy">© 2026 GARCH QUANT | Quantitative Financial Tool Platform</p>
+      <p class="footer-author">Fuli Yang, Ph.D.</p>
+    </div>
+  </footer>
+  <script src="/assets/js/theme.js"></script>
+  <script>
+  function calculate() {
+    var p1 = document.getElementById('param1').value;
+    var p2 = document.getElementById('param2').value;
+    var p3 = document.getElementById('param3').value;
+    var p4 = document.getElementById('param4').value;
+    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    document.getElementById('resultBox').classList.add('show');
+  }
+  </script>
+</body>
+</html>
