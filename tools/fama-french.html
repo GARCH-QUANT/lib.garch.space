@@ -69,11 +69,55 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var model = document.getElementById('param1').value.trim();
+    var rf = parseFloat(document.getElementById('param2').value) || 3;
+    var alpha = parseFloat(document.getElementById('param3').value) || 2.5;
+    var betaMkt = parseFloat(document.getElementById('param4').value) || 1.1;
+    var dataInput = document.getElementById('dataInput').value.trim();
+
+    var factors = dataInput ? dataInput.split(',').map(parseFloat) : [];
+    var mkt = factors[0] || 0;
+    var smb = factors[1] || 0;
+    var hml = factors[2] || 0;
+    var rmw = factors[3] || 0;
+    var cma = factors[4] || 0;
+
+    var betaSmb = 0.5, betaHml = 0.5, betaRmw = 0.3, betaCma = 0.3;
+    var expectedReturn, capmReturn;
+
+    if (model === '五因子') {
+      expectedReturn = rf/100 + betaMkt*mkt + betaSmb*smb + betaHml*hml + betaRmw*rmw + betaCma*cma;
+      capmReturn = rf/100 + betaMkt*mkt;
+      var trackingError = Math.sqrt(smb*smb + hml*hml + rmw*rmw + cma*cma) / 100;
+      var infoRatio = trackingError > 0 ? (alpha/100) / trackingError : 0;
+      var result = 'Fama-French 五因子模型:\n' +
+        '无风险利率: ' + rf.toFixed(2) + '%\n' +
+        'MKT 因子暴露: β=' + betaMkt.toFixed(2) + ', 收益率: ' + mkt.toFixed(2) + '%\n' +
+        'SMB 因子暴露: β=' + betaSmb.toFixed(2) + ', 收益率: ' + smb.toFixed(2) + '%\n' +
+        'HML 因子暴露: β=' + betaHml.toFixed(2) + ', 收益率: ' + hml.toFixed(2) + '%\n' +
+        'RMW 因子暴露: β=' + betaRmw.toFixed(2) + ', 收益率: ' + rmw.toFixed(2) + '%\n' +
+        'CMA 因子暴露: β=' + betaCma.toFixed(2) + ', 收益率: ' + cma.toFixed(2) + '%\n' +
+        '预期超额收益: ' + (expectedReturn * 100).toFixed(2) + '%\n' +
+        'Alpha: ' + alpha.toFixed(2) + '%\n' +
+        'CAPM 预期收益: ' + (capmReturn * 100).toFixed(2) + '%\n' +
+        '信息比率: ' + infoRatio.toFixed(2);
+    } else {
+      expectedReturn = rf/100 + betaMkt*mkt + betaSmb*smb + betaHml*hml;
+      capmReturn = rf/100 + betaMkt*mkt;
+      var trackingError = Math.sqrt(smb*smb + hml*hml) / 100;
+      var infoRatio = trackingError > 0 ? (alpha/100) / trackingError : 0;
+      var result = 'Fama-French 三因子模型:\n' +
+        '无风险利率: ' + rf.toFixed(2) + '%\n' +
+        'MKT 因子暴露: β=' + betaMkt.toFixed(2) + ', 收益率: ' + mkt.toFixed(2) + '%\n' +
+        'SMB 因子暴露: β=' + betaSmb.toFixed(2) + ', 收益率: ' + smb.toFixed(2) + '%\n' +
+        'HML 因子暴露: β=' + betaHml.toFixed(2) + ', 收益率: ' + hml.toFixed(2) + '%\n' +
+        '预期超额收益: ' + (expectedReturn * 100).toFixed(2) + '%\n' +
+        'Alpha: ' + alpha.toFixed(2) + '%\n' +
+        'CAPM 预期收益: ' + (capmReturn * 100).toFixed(2) + '%\n' +
+        '信息比率: ' + infoRatio.toFixed(2);
+    }
+
+    document.getElementById('resultValue').textContent = result;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

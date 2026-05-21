@@ -68,12 +68,209 @@
   </footer>
   <script src="/assets/js/theme.js"></script>
   <script>
+  // ========== 数学辅助函数 ==========
+  // 误差函数 erf 近似 (Abramowitz & Stegun)
+  function erf(x) {
+    var a1 =  0.254829592, a2 = -0.284496736, a3 =  1.421413741;
+    var a4 = -1.453152027, a5 =  1.061405429, p  =  0.3275911;
+    var sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    var t = 1.0 / (1.0 + p * x);
+    var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    return sign * y;
+  }
+
+  // 标准正态分布 CDF φ(x)
+  function normCDF(x) {
+    return 0.5 * (1 + erf(x / Math.sqrt(2)));
+  }
+
+  // 标准正态分布逆函数 φ⁻¹(p) 近似 (Rational approximation)
+  function normInv(p) {
+    if (p <= 0) return -Infinity;
+    if (p >= 1) return Infinity;
+    if (p === 0.5) return 0;
+    var a = [
+      -3.969683028665376e+01,  2.209460984245205e+02,
+      -2.759285104469687e+02,  1.383577518672690e+02,
+      -3.066479806614716e+01,  2.506628277459239e+00
+    ];
+    var b = [
+      -5.447609879822406e+01,  1.615858368580409e+02,
+      -1.556989798598866e+02,  6.680131188771972e+01,
+      -1.328468155909591e+01
+    ];
+    var c = [
+      -7.784894002430293e-03, -3.223964580411365e-01,
+      -2.400758277161838e+00, -2.549732539343734e+00,
+       4.374664141464968e+00,  2.938163982698783e+00
+    ];
+    var d = [
+       7.784695709041462e-03,  3.224671290700398e-01,
+       2.445134137142996e+00,  3.754408661907416e+00
+    ];
+    var pLow = 0.02425, pHigh = 1 - pLow;
+    var q, r, x;
+    if (p < pLow) {
+      q = Math.sqrt(-2 * Math.log(p));
+      x = (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+          ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+    } else if (p <= pHigh) {
+      q = p - 0.5;
+      r = q * q;
+      x = (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+          (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+    } else {
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      x = -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+           ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+    }
+    return x;
+  }
+
+  // 二元正态分布 CDF 近似 (Drezner, 1978)
+  function bivariateNormCDF(a, b, rho) {
+    if (rho === 0) return normCDF(a) * normCDF(b);
+    var x2 = a * a, y2 = b * b;
+    if (Math.abs(rho) > 0.999) {
+      rho = rho > 0 ? 0.999 : -0.999;
+    }
+    var r2 = 1 - rho * rho;
+    var result = 0;
+    // Gauss-Legendre 20点积分近似
+    var xg = [0.148874,0.433395,0.679409,0.865063,0.973827];
+    var wg = [0.295524,0.269266,0.219086,0.149451,0.066671];
+    for (var i = 0; i < 5; i++) {
+      for (var j = 0; j < 5; j++) {
+        var x = xg[i], y = xg[j];
+        var w = wg[i] * wg[j];
+        var f1 = (x * a + y * b) / Math.sqrt(2);
+        var f2 = (-x * a + y * b) / Math.sqrt(2);
+        var f = Math.exp(-(f1*f1 + f2*f2 - 2*rho*x*y*a*b) / (2*r2));
+        result += w * f;
+      }
+    }
+    result *= (1/Math.PI) * Math.asin(rho);
+    result += normCDF(a) * normCDF(b);
+    return Math.max(0, Math.min(1, result));
+  }
+
+  // t 分布 CDF (单变量) 近似
+  function tCDF(x, nu) {
+    var t = nu / (x * x + nu);
+    var p = 0.5 * t;
+    for (var k = 1; k < nu / 2; k++) {
+      p += (nu / (2 * k)) * t * p;
+    }
+    return x > 0 ? 1 - 0.5 * p : 0.5 * p;
+  }
+
+  // t 分布逆函数近似 (Simple rational approximation)
+  function tInv(p, nu) {
+    if (p <= 0) return -Infinity;
+    if (p >= 1) return Infinity;
+    if (p === 0.5) return 0;
+    var x = normInv(p);
+    // 调整因子用于t分布
+    var g = 1 / (1 + (0.25 / nu) * x * x);
+    return x * Math.sqrt(1 + (x * x - 1) / (2 * nu));
+  }
+
+  // 二元 t 分布 CDF 近似 (调用二元正态CDF的变换方法)
+  function bivariateTCDF(a, b, rho, nu) {
+    if (rho === 0) return tCDF(a, nu) * tCDF(b, nu);
+    // 使用变换近似
+    var ra = Math.sqrt(1 + a * a / nu);
+    var rb = Math.sqrt(1 + b * b / nu);
+    // 简化: 用正态近似
+    return bivariateNormCDF(a / ra, b / rb, rho);
+  }
+
+  // ========== Copula 函数 ==========
+  // Gaussian Copula CDF
+  function gaussianCopula(u, v, rho) {
+    var zu = normInv(u);
+    var zv = normInv(v);
+    return bivariateNormCDF(zu, zv, rho);
+  }
+
+  // t-Copula CDF
+  function tCopula(u, v, rho, nu) {
+    var tu = tInv(u, nu);
+    var tv = tInv(v, nu);
+    return bivariateTCDF(tu, tv, rho, nu);
+  }
+
+  // Clayton Copula CDF
+  function claytonCopula(u, v, theta) {
+    if (theta <= 0) return Math.min(u, v);
+    var p1 = Math.pow(u, -theta);
+    var p2 = Math.pow(v, -theta);
+    var val = p1 + p2 - 1;
+    if (val <= 0) return 0;
+    return Math.max(0, Math.pow(val, -1 / theta));
+  }
+
+  // Gumbel Copula CDF
+  function gumbelCopula(u, v, theta) {
+    if (theta < 1) theta = 1;
+    if (u === 0 || v === 0) return 0;
+    var m1 = Math.pow(-Math.log(u), theta);
+    var m2 = Math.pow(-Math.log(v), theta);
+    var s = m1 + m2;
+    return Math.exp(-Math.pow(s, 1 / theta));
+  }
+
+  // Kendall tau (Gaussian)
+  function kendallTau(rho) {
+    return (2 / Math.PI) * Math.asin(rho);
+  }
+
+  // ========== 主计算函数 ==========
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p1 = parseFloat(document.getElementById('param1').value) || 0.5;
+    var p2 = parseFloat(document.getElementId('param2').value) || 8;
+    var p3 = parseFloat(document.getElementId('param3').value) || 2.0;
+    var p4 = parseFloat(document.getElementById('param4').value) || 1.5;
+    var dataInput = document.getElementById('dataInput').value;
+
+    // 解析边缘分布序列
+    var vals = dataInput.split(',').map(function(s) {
+      return parseFloat(s.trim());
+    }).filter(function(v) {
+      return !isNaN(v) && v > 0 && v < 1;
+    });
+
+    if (vals.length < 2) {
+      document.getElementById('resultValue').textContent = '请输入至少2个有效的概率值 (0-1之间)';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    var rho = Math.max(-1, Math.min(1, p1));
+    var nu = Math.max(2, p2);
+    var thetaClay = Math.max(0.01, p3);
+    var thetaGumb = Math.max(1, p4);
+
+    // 取前两个值计算 copula
+    var u = vals[0];
+    var v = vals[1];
+
+    var gCop = gaussianCopula(u, v, rho);
+    var tCop = tCopula(u, v, rho, nu);
+    var cCop = claytonCopula(u, v, thetaClay);
+    var guCop = gumbelCopula(u, v, thetaGumb);
+    var ktau = kendallTau(rho);
+
+    var output = [
+      'Gaussian Copula CDF: ' + gCop.toFixed(3),
+      't-Copula CDF (ν=' + nu + '): ' + tCop.toFixed(3),
+      'Clayton Copula CDF (θ=' + thetaClay + '): ' + cCop.toFixed(3),
+      'Gumbel Copula CDF (θ=' + thetaGumb + '): ' + guCop.toFixed(3),
+      'Kendall τ: ' + ktau.toFixed(3)
+    ].join('\n');
+
+    document.getElementById('resultValue').textContent = output;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

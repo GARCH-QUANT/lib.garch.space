@@ -69,11 +69,76 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var dataInput = document.getElementById('dataInput').value;
+    var param2 = parseFloat(document.getElementById('param2').value) || 10;
+    var param3 = parseFloat(document.getElementById('param3').value) || 18;
+    var param4 = parseFloat(document.getElementById('param4').value) || 12;
+
+    // 1. 解析月度收益率数组
+    var returns = dataInput.split(',').map(function(v) { return parseFloat(v.trim()); });
+    var N = returns.length;
+
+    // 2. 累积净值曲线
+    var nav = [1];
+    for (var i = 1; i < N; i++) {
+      nav.push(nav[i-1] * (1 + returns[i]));
+    }
+
+    // 3. 总收益率
+    var totalReturn = nav[nav.length - 1] - 1;
+
+    // 4. 年化收益率
+    var annualizedReturn = Math.pow(1 + totalReturn, 12 / N) - 1;
+
+    // 5. 夏普比率
+    var rf = param2 * 0.03; // param2 is in %, rf = param2 * 0.3 / 100
+    var sharpeRatio = (param3 / 100 - rf) / (param4 / 100);
+
+    // 6. 最大回撤
+    var peak = 1;
+    var maxDrawdown = 0;
+    for (var i = 0; i < nav.length; i++) {
+      if (nav[i] > peak) peak = nav[i];
+      var dd = (peak - nav[i]) / peak;
+      if (dd > maxDrawdown) maxDrawdown = dd;
+    }
+
+    // 7. 卡玛比率
+    var calmarRatio = annualizedReturn / maxDrawdown;
+
+    // 8. 胜率
+    var positiveMonths = 0;
+    for (var i = 0; i < N; i++) {
+      if (returns[i] > 0) positiveMonths++;
+    }
+    var winRate = positiveMonths / N;
+
+    // 9. 索提诺比率
+    var negativeReturns = [];
+    for (var i = 0; i < N; i++) {
+      if (returns[i] < 0) negativeReturns.push(returns[i]);
+    }
+    var downsideStd = 0;
+    if (negativeReturns.length > 1) {
+      var negMean = negativeReturns.reduce(function(a, b) { return a + b; }, 0) / negativeReturns.length;
+      var sumSq = 0;
+      for (var i = 0; i < negativeReturns.length; i++) {
+        sumSq += Math.pow(negativeReturns[i] - negMean, 2);
+      }
+      downsideStd = Math.sqrt(sumSq / (negativeReturns.length - 1)) * Math.sqrt(12);
+    }
+    var sortinoRatio = downsideStd > 0 ? (annualizedReturn - rf) / downsideStd : 0;
+
+    // 输出结果
+    var result = '总收益率: ' + (totalReturn * 100).toFixed(2) + '%\n' +
+                 '年化收益率: ' + (annualizedReturn * 100).toFixed(2) + '%\n' +
+                 '夏普比率: ' + sharpeRatio.toFixed(2) + '\n' +
+                 '最大回撤: ' + (maxDrawdown * 100).toFixed(2) + '%\n' +
+                 '卡玛比率: ' + calmarRatio.toFixed(2) + '\n' +
+                 '胜率: ' + (winRate * 100).toFixed(1) + '%\n' +
+                 '索提诺比率: ' + sortinoRatio.toFixed(2);
+
+    document.getElementById('resultValue').textContent = result;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

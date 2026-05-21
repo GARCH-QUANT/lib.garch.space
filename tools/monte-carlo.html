@@ -69,12 +69,81 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    // Get parameters
+    var n = parseInt(document.getElementById('param1').value) || 10000;
+    var S0 = parseFloat(document.getElementById('param2').value) || 100;
+    var mu = parseFloat(document.getElementById('param3').value) / 100 || 0.08;
+    var sigma = parseFloat(document.getElementById('param4').value) / 100 || 0.20;
+    var dataInput = document.getElementById('dataInput').value;
+    
+    // Parse trading days
+    var defaultDays = [1,21,42,63,84,105,126,147,168,189,210,231,252];
+    var days = [];
+    if (dataInput && dataInput.trim()) {
+        var parts = dataInput.split(',');
+        for (var i = 0; i < parts.length; i++) {
+            var d = parseInt(parts[i].trim());
+            if (!isNaN(d) && d > 0) days.push(d);
+        }
+    }
+    if (days.length === 0) days = defaultDays;
+    
+    // Use last day as terminal time
+    var T = days[days.length - 1];
+    
+    // Generate terminal values using GBM
+    var terminalValues = [];
+    for (var i = 0; i < n; i++) {
+        var Z = normalRandom();
+        var t = T / 252;
+        var ST = S0 * Math.exp((mu - sigma * sigma / 2) * t + sigma * Math.sqrt(t) * Z);
+        terminalValues.push(ST);
+    }
+    
+    // Sort for percentile calculations
+    terminalValues.sort(function(a, b) { return a - b; });
+    
+    // Calculate statistics
+    var sum = 0;
+    for (var i = 0; i < n; i++) sum += terminalValues[i];
+    var mean = sum / n;
+    
+    var sumSq = 0;
+    for (var i = 0; i < n; i++) sumSq += (terminalValues[i] - mean) * (terminalValues[i] - mean);
+    var stdDev = Math.sqrt(sumSq / n);
+    
+    var p5 = terminalValues[Math.floor(n * 0.05)];
+    var p95 = terminalValues[Math.floor(n * 0.95)];
+    var VaR = S0 - p5;
+    
+    // CVaR: average of values below P5
+    var cvarSum = 0;
+    var cvarCount = Math.floor(n * 0.05);
+    for (var i = 0; i < cvarCount; i++) cvarSum += terminalValues[i];
+    var CVaR = S0 - (cvarSum / cvarCount);
+    
+    var simError = stdDev / Math.sqrt(n);
+    
+    // Output results
+    var output = 
+        '模拟路径数: ' + n + '\n' +
+        '终值均值: ' + mean.toFixed(2) + '\n' +
+        '终值标准差: ' + stdDev.toFixed(2) + '\n' +
+        '5%分位数(P5): ' + p5.toFixed(2) + '\n' +
+        '95%分位数(P95): ' + p95.toFixed(2) + '\n' +
+        '单日 VaR(5%): -' + VaR.toFixed(2) + '\n' +
+        'CVaR(5%): -' + CVaR.toFixed(2) + '\n' +
+        '模拟误差: ±' + simError.toFixed(2);
+    
+    document.getElementById('resultValue').textContent = output;
     document.getElementById('resultBox').classList.add('show');
+  }
+  
+  function normalRandom() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
   }
   </script>
 </body>

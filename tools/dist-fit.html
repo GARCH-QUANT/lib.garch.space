@@ -68,12 +68,166 @@
   </footer>
   <script src="/assets/js/theme.js"></script>
   <script>
+  // Log-Gamma function using Stirling approximation
+  function logGamma(z) {
+    if (z <= 0) return Infinity;
+    var c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+             -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    var sum = 1.000000000190015;
+    for (var i = 0; i < 6; i++) {
+      sum += c[i] / (z + i + 1);
+    }
+    return (z + 0.5) * Math.log(z + 5.5) - (z + 5.5) + Math.log(2.5066282746310005 * sum / z);
+  }
+
+  // Gamma function
+  function gamma(z) {
+    return Math.exp(logGamma(z));
+  }
+
+  // Regularized incomplete beta function using continued fraction
+  function betaCF(a, b, x) {
+    var maxIter = 200, eps = 3e-12;
+    var qab = a + b, qap = a + 1, qam = a - 1;
+    var c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < 1e-30) d = 1e-30;
+    d = 1 / d;
+    var h = d;
+    for (var m = 1; m <= maxIter; m++) {
+      var m2 = 2 * m;
+      var aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d;
+      if (Math.abs(d) < 1e-30) d = 1e-30;
+      c = 1 + aa / c;
+      if (Math.abs(c) < 1e-30) c = 1e-30;
+      d = 1 / d;
+      h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d;
+      if (Math.abs(d) < 1e-30) d = 1e-30;
+      c = 1 + aa / c;
+      if (Math.abs(c) < 1e-30) c = 1e-30;
+      d = 1 / d;
+      var del = d * c;
+      h *= del;
+      if (Math.abs(del - 1) < eps) break;
+    }
+    return h;
+  }
+
+  function betaInc(a, b, x) {
+    if (x < 0 || x > 1) return 0;
+    if (x === 0) return 0;
+    if (x === 1) return 1;
+    var factor = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) {
+      return factor * betaCF(a, b, x) / a;
+    } else {
+      return 1 - factor * betaCF(b, a, 1 - x) / b;
+    }
+  }
+
+  // t-distribution PDF
+  function tPDF(x, nu, mu, sigma) {
+    var coef = gamma((nu + 1) / 2) / (gamma(nu / 2) * Math.sqrt(nu * Math.PI) * sigma);
+    var arg = 1 + Math.pow((x - mu), 2) / (nu * sigma * sigma);
+    return coef * Math.pow(arg, -(nu + 1) / 2);
+  }
+
+  // t-distribution CDF using beta function relationship
+  function tCDF(x, nu, mu, sigma) {
+    var t = (x - mu) / sigma;
+    var w = nu / (nu + t * t);
+    if (t >= 0) {
+      return 1 - 0.5 * betaInc(nu / 2, 0.5, w);
+    } else {
+      return 0.5 * betaInc(nu / 2, 0.5, w);
+    }
+  }
+
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p1 = document.getElementById('param1').value.trim() || 't';
+    var p2 = parseFloat(document.getElementById('param2').value) || 6;
+    var p3 = parseFloat(document.getElementById('param3').value) || 0;
+    var p4 = parseFloat(document.getElementById('param4').value) || 1;
+    var dataStr = document.getElementById('dataInput').value;
+
+    var data = dataStr.split(/[,;\s]+/).map(parseFloat).filter(function(v) { return !isNaN(v) && isFinite(v); });
+
+    if (data.length < 3) {
+      document.getElementById('resultValue').textContent = '错误: 样本数据不足，需要至少3个有效数据点';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    // Sample mean and standard deviation
+    var n = data.length;
+    var mean = data.reduce(function(s, v) { return s + v; }, 0) / n;
+    var variance = data.reduce(function(s, v) { return s + Math.pow(v - mean, 2); }, 0) / (n - 1);
+    var std = Math.sqrt(variance);
+
+    // Log-likelihood
+    var nu = p2, mu = p3, sigma = p4;
+    var ll = 0;
+    for (var i = 0; i < n; i++) {
+      var pdf = tPDF(data[i], nu, mu, sigma);
+      if (pdf <= 0) {
+        ll = -Infinity;
+        break;
+      }
+      ll += Math.log(pdf);
+    }
+
+    // KS statistic
+    var sorted = data.slice().sort(function(a, b) { return a - b; });
+    var ks = 0;
+    for (var i = 0; i < n; i++) {
+      var empCdf = (i + 1) / n;
+      var theorCdf = tCDF(sorted[i], nu, mu, sigma);
+      ks = Math.max(ks, Math.abs(empCdf - theorCdf));
+      if (i > 0) {
+        var prevCdf = i / n;
+        ks = Math.max(ks, Math.abs(prevCdf - theorCdf));
+      }
+    }
+
+    // KS p-value approximation (using asymptotic distribution)
+    var ksPValue = 0;
+    if (ks > 0) {
+      var stat = Math.sqrt(n) * ks;
+      ksPValue = 1 - ksmd结分布近似(stat);
+      if (ksPValue < 0) ksPValue = 0;
+      if (ksPValue > 1) ksPValue = 1;
+    } else {
+      ksPValue = 1;
+    }
+
+    function ksmd结分布近似(s) {
+      // Kolmogorov distribution approximation: P(K <= s) ≈ 1 - 2*sum_{k=1}^∞ (-1)^{k-1} e^(-2*k^2*s^2)
+      var sum = 0;
+      var sign = 1;
+      for (var k = 1; k <= 100; k++) {
+        sum += sign * Math.exp(-2 * k * k * s * s);
+        sign = -sign;
+        if (Math.abs(sum) < 1e-15) break;
+      }
+      return 2 * sum;
+    }
+
+    // Theoretical mean and variance
+    var theoMean = nu > 1 ? mu : NaN;
+    var theoVar = nu > 2 ? (nu * sigma * sigma) / (nu - 2) : NaN;
+
+    var result = '分布类型: ' + p1.toUpperCase() + '\n' +
+      't分布参数: ν=' + nu.toFixed(0) + ', μ=' + mu.toFixed(2) + ', σ=' + sigma.toFixed(2) + '\n' +
+      '样本均值: ' + mean.toFixed(4) + '  样本标准差: ' + std.toFixed(4) + '\n' +
+      '对数似然: ' + ll.toFixed(4) + '\n' +
+      'KS统计量: ' + ks.toFixed(4) + '\n' +
+      'KS p值: ' + ksPValue.toFixed(4) + '\n' +
+      '理论均值: ' + (theoMean !== theoMean ? 'N/A' : theoMean.toFixed(4)) + '\n' +
+      '理论方差: ' + (theoVar !== theoVar ? 'N/A' : theoVar.toFixed(4));
+
+    document.getElementById('resultValue').textContent = result;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

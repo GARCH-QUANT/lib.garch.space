@@ -69,11 +69,64 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p1 = parseFloat(document.getElementById('param1').value);
+    var p2 = parseFloat(document.getElementById('param2').value);
+    var p3 = parseFloat(document.getElementById('param3').value);
+    var p4 = parseFloat(document.getElementById('param4').value);
+    var dataStr = document.getElementById('dataInput').value;
+
+    var returns = dataStr.split(',').map(function(s) { return parseFloat(s.trim()); }).filter(function(n) { return !isNaN(n); });
+
+    if (returns.length < 2) {
+      document.getElementById('resultValue').innerHTML = '需要至少2个收益率数据';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    var mean = returns.reduce(function(a, b) { return a + b; }, 0) / returns.length;
+    var squaredDiffs = returns.map(function(r) { return Math.pow(r - mean, 2); });
+    var sampleVar = squaredDiffs.reduce(function(a, b) { return a + b; }, 0) / (returns.length - 1);
+    var sqrt252 = Math.sqrt(252);
+
+    // EGARCH(1,1)
+    var h_egarch = sampleVar;
+    var log_h_egarch = Math.log(h_egarch);
+    for (var i = 1; i < returns.length; i++) {
+      var eps = returns[i - 1];
+      var sqrt_h = Math.sqrt(h_egarch);
+      log_h_egarch = p1 + p2 * Math.abs(eps) / sqrt_h + p3 * eps / sqrt_h + p4 * log_h_egarch;
+      h_egarch = Math.exp(log_h_egarch);
+    }
+    var egarch_annual = Math.sqrt(h_egarch) * sqrt252 * 100;
+
+    // GJR-GARCH(1,1)
+    var h_gjr = sampleVar;
+    for (var i = 1; i < returns.length; i++) {
+      var eps = returns[i - 1];
+      var I = eps < 0 ? 1 : 0;
+      h_gjr = p1 + (p2 + p3 * I) * eps * eps + p4 * h_gjr;
+    }
+    var gjr_annual = Math.sqrt(h_gjr) * sqrt252 * 100;
+
+    // Positive and negative shock coefficients
+    var posCoef = p2;
+    var negCoef = p2 + p3;
+
+    // Leverage effect
+    var leverage = (negCoef / posCoef - 1) * 100;
+
+    // Half-life
+    var halfLife = Math.log(0.5) / Math.log(p4);
+
+    var resultHTML = 'EGARCH 条件波动率(年化): ' + egarch_annual.toFixed(2) + '%<br>' +
+      'GJR 条件波动率(年化): ' + gjr_annual.toFixed(2) + '%<br>' +
+      '正冲击系数: ' + posCoef.toFixed(2) + '<br>' +
+      '负冲击系数: ' + negCoef.toFixed(2) + '<br>' +
+      '杠杆效应: +' + leverage.toFixed(1) + '%<br>' +
+      '持久性 β: ' + p4.toFixed(2) + '<br>' +
+      '半衰期: ' + halfLife.toFixed(1) + ' 天';
+
+    document.getElementById('resultValue').innerHTML = resultHTML;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

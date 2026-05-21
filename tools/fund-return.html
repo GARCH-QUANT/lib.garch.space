@@ -70,10 +70,80 @@
   <script>
   function calculate() {
     var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p2 = parseFloat(document.getElementById('param2').value) || 3;
+    var p3 = parseFloat(document.getElementById('param3').value) || 20;
+    var p4 = parseFloat(document.getElementById('param4').value) || 25;
+    var dataInput = document.getElementById('dataInput').value;
+
+    var navs = dataInput.split(',').map(function(v) { return parseFloat(v.trim()); });
+    if (navs.length === 0 || isNaN(navs[0])) {
+      document.getElementById('resultValue').textContent = '请输入有效的净值序列';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    var N = navs.length;
+
+    // 年化因子
+    var annFactor = 252;
+    if (p1 === '周频') annFactor = 52;
+    else if (p1 === '月频') annFactor = 12;
+
+    // 收益率序列
+    var returns = [];
+    for (var i = 1; i < N; i++) {
+      returns.push((navs[i] - navs[i - 1]) / navs[i - 1]);
+    }
+
+    // 总收益率
+    var totalReturn = (navs[N - 1] / navs[0]) - 1;
+
+    // 年化收益率
+    var annReturn = Math.pow(1 + totalReturn, annFactor / N) - 1;
+
+    // 年化波动率
+    var mean = returns.reduce(function(a, b) { return a + b; }, 0) / returns.length;
+    var variance = returns.reduce(function(a, b) { return a + Math.pow(b - mean, 2); }, 0) / (returns.length - 1);
+    var annVol = Math.sqrt(variance) * Math.sqrt(annFactor);
+
+    // 最大回撤
+    var peak = navs[0];
+    var maxDD = 0;
+    for (var i = 0; i < N; i++) {
+      if (navs[i] > peak) peak = navs[i];
+      var dd = (peak - navs[i]) / peak;
+      if (dd > maxDD) maxDD = dd;
+    }
+
+    // 卡尔玛比率
+    var calmar = maxDD === 0 ? 0 : annReturn / maxDD;
+
+    // 无风险利率
+    var rf = p2 / 100;
+
+    // 超额收益序列
+    var excessReturns = [];
+    for (var i = 0; i < returns.length; i++) {
+      excessReturns.push(returns[i] - rf / annFactor);
+    }
+
+    // 跟踪误差 = stdev(r - rf/年化因子) * sqrt(年化因子)
+    var exMean = excessReturns.reduce(function(a, b) { return a + b; }, 0) / excessReturns.length;
+    var exVariance = excessReturns.reduce(function(a, b) { return a + Math.pow(b - exMean, 2); }, 0) / (excessReturns.length - 1);
+    var trackingError = Math.sqrt(exVariance) * Math.sqrt(annFactor);
+
+    // 信息比率 = 超额收益 / 跟踪误差
+    var excessReturn = annReturn - rf;
+    var infoRatio = trackingError === 0 ? 0 : excessReturn / trackingError;
+
+    var result = '总收益率: ' + (totalReturn * 100).toFixed(2) + '%\n' +
+                 '年化收益率: ' + (annReturn * 100).toFixed(2) + '%\n' +
+                 '年化波动率: ' + (annVol * 100).toFixed(2) + '%\n' +
+                 '最大回撤: ' + (maxDD * 100).toFixed(2) + '%\n' +
+                 '卡尔玛比率: ' + calmar.toFixed(2) + '\n' +
+                 '信息比率: ' + infoRatio.toFixed(2);
+
+    document.getElementById('resultValue').textContent = result;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

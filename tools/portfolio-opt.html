@@ -69,11 +69,214 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p1 = parseInt(document.getElementById('param1').value) || 3;
+    var p2 = parseFloat(document.getElementById('param2').value) || 15;
+    var p3 = parseFloat(document.getElementById('param3').value) || 3;
+    var p4 = document.getElementById('param4').value || 'minvar';
+    var dataInput = document.getElementById('dataInput').value;
+
+    // 1. 解析预期收益率数组
+    var returns = dataInput.split(',').map(function(v) { return parseFloat(v.trim()); });
+    var N = Math.max(returns.length, p1);
+    while (returns.length < N) { returns.push(10 + Math.random() * 5); }
+    returns = returns.slice(0, N);
+
+    // 2. 波动率估计: std_i = |收益率_i| * 0.4 + 0.02
+    var stds = returns.map(function(r) { return Math.abs(r) * 0.4 + 0.02; });
+
+    // 3. LCG随机数生成器 (种子=123)
+    var seed = 123;
+    var lcg = function(s) {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      return s;
+    };
+    var rng = seed;
+    for (var i = 0; i < 100; i++) { rng = lcg(rng); } // 预热
+
+    // 生成随机对称矩阵 R
+    var R = [];
+    for (var i = 0; i < N; i++) {
+      R[i] = [];
+      for (var j = 0; j < N; j++) {
+        if (j < i) {
+          R[i][j] = R[j][i];
+        } else {
+          rng = lcg(rng);
+          R[i][j] = rng / 0x7fffffff;
+        }
+      }
+    }
+
+    // 正定性修正: 对角线归一化为1
+    for (var i = 0; i < N; i++) {
+      var diag = Math.sqrt(R[i][i]);
+      for (var j = 0; j < N; j++) {
+        R[i][j] = R[i][j] / diag / Math.sqrt(R[j][j]);
+      }
+    }
+    // 确保对称性
+    for (var i = 0; i < N; i++) {
+      for (var j = i + 1; j < N; j++) {
+        R[i][j] = (R[i][j] + R[j][i]) / 2;
+        R[j][i] = R[i][j];
+      }
+    }
+
+    // 4. 协方差矩阵 Σ = diag(std) × R × diag(std)
+    var Sigma = [];
+    for (var i = 0; i < N; i++) {
+      Sigma[i] = [];
+      for (var j = 0; j < N; j++) {
+        Sigma[i][j] = stds[i] * stds[j] * R[i][j];
+      }
+    }
+
+    // 数值迭代求解权重
+    // 起始 w_i = 1/N
+    var w = [];
+    for (var i = 0; i < N; i++) { w.push(1.0 / N); }
+
+    // 计算组合方差 w'Σw
+    function portVar(wt) {
+      var v = 0;
+      for (var i = 0; i < N; i++) {
+        for (var j = 0; j < N; j++) {
+          v += wt[i] * wt[j] * Sigma[i][j];
+        }
+      }
+      return v;
+    }
+
+    // 计算组合预期收益 w'μ
+    function portReturn(wt) {
+      var r = 0;
+      for (var i = 0; i < N; i++) { r += wt[i] * returns[i]; }
+      return r;
+    }
+
+    // 计算组合波动率 sqrt(w'Σw)
+    function portStd(wt) {
+      return Math.sqrt(portVar(wt));
+    }
+
+    // 梯度下降 (用于最小方差)
+    var J_minvar = function(wt) { return portVar(wt); };
+    var grad_J = function(wt) {
+      var g = [];
+      for (var i = 0; i < N; i++) {
+        var gi = 0;
+        for (var j = 0; j < N; j++) {
+          gi += 2 * Sigma[i][j] * wt[j];
+        }
+        g.push(gi);
+      }
+      return g;
+    };
+
+    // 最小方差组合优化
+    for (var iter = 0; iter < 20; iter++) {
+      var g = grad_J(w);
+      var w_new = [];
+      var denom = 0;
+      for (var i = 0; i < N; i++) {
+        w_new.push(w[i] * g[i]);
+        denom += w[i] * g[i];
+      }
+      if (denom > 1e-10) {
+        for (var i = 0; i < N; i++) { w_new[i] /= denom; }
+      }
+      // 归一化并确保非负
+      for (var i = 0; i < N; i++) {
+        if (w_new[i] < 0) w_new[i] = 0;
+      }
+      var sumW = w_new.reduce(function(a, b) { return a + b; }, 0);
+      if (sumW > 0) {
+        for (var i = 0; i < N; i++) { w_new[i] /= sumW; }
+      }
+      w = w_new;
+    }
+    var minVarWeights = w.slice();
+
+    // 最大夏普比率组合 (网格搜索)
+    var rf = p3;
+    var mu = returns;
+
+    // 有效前沿搜索
+    var bestSharpe = -Infinity;
+    var bestWeights = minVarWeights.slice();
+    var bestRet = portReturn(minVarWeights);
+    var bestVol = portStd(minVarWeights);
+
+    // 网格搜索可行权重
+    var gridSize = 50;
+    var eps = 0.001;
+    for (var gi = 0; gi < gridSize; gi++) {
+      var testW = [];
+      var remaining = 1.0;
+      for (var i = 0; i < N - 1; i++) {
+        var wi = Math.random() * remaining;
+        testW.push(Math.max(0, wi));
+        remaining -= wi;
+      }
+      testW.push(Math.max(0, remaining));
+
+      var r = portReturn(testW);
+      var v = portStd(testW);
+      if (v < eps) continue;
+      var sharpe = (r - rf) / v;
+      if (sharpe > bestSharpe) {
+        bestSharpe = sharpe;
+        bestWeights = testW.slice();
+        bestRet = r;
+        bestVol = v;
+      }
+    }
+
+    // 精调：在最优权重附近扰动搜索
+    var fineIter = 100;
+    for (var fi = 0; fi < fineIter; fi++) {
+      var testW = bestWeights.slice();
+      for (var i = 0; i < N; i++) {
+        testW[i] += (Math.random() - 0.5) * 0.1;
+        if (testW[i] < 0) testW[i] = 0;
+      }
+      var sumW = testW.reduce(function(a, b) { return a + b; }, 0);
+      for (var i = 0; i < N; i++) { testW[i] /= sumW; }
+
+      var r = portReturn(testW);
+      var v = portStd(testW);
+      if (v < eps) continue;
+      var sharpe = (r - rf) / v;
+      if (sharpe > bestSharpe) {
+        bestSharpe = sharpe;
+        bestWeights = testW.slice();
+        bestRet = r;
+        bestVol = v;
+      }
+    }
+
+    // 目标收益下的最优配置 (有效前沿插值)
+    var targetRet = p2;
+    var effW = minVarWeights.slice();
+    var effRet = portReturn(effW);
+    var effVol = portStd(effW);
+    var effSharpe = (effRet - rf) / effVol;
+
+    // 根据 param4 选择输出
+    var outW = (p4 === 'maxSharpe') ? bestWeights : minVarWeights;
+    var outRet = (p4 === 'maxSharpe') ? bestRet : portReturn(minVarWeights);
+    var outVol = (p4 === 'maxSharpe') ? bestVol : portStd(minVarWeights);
+    var outSharpe = (p4 === 'maxSharpe') ? bestSharpe : ((outRet - rf) / outVol);
+
+    // 格式化输出
+    var weightStr = outW.map(function(v) { return (v * 100).toFixed(1) + '%'; }).join(', ');
+    var result = '最优组合权重: ' + weightStr + '\n';
+    result += '组合预期收益: ' + outRet.toFixed(2) + '%\n';
+    result += '组合波动率: ' + outVol.toFixed(2) + '%\n';
+    result += '夏普比率: ' + outSharpe.toFixed(2) + '\n';
+    result += '\n目标收益 ' + targetRet + '% 下最优配置: ' + effW.map(function(v) { return (v * 100).toFixed(1) + '%'; }).join(', ');
+
+    document.getElementById('resultValue').textContent = result;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

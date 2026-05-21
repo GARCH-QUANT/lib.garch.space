@@ -69,11 +69,41 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p1 = parseFloat(document.getElementById('param1').value); // 初始净值
+    var p2 = parseFloat(document.getElementById('param2').value); // 最终净值
+    var p3 = parseFloat(document.getElementById('param3').value); // 最大回撤%
+    var p4 = parseFloat(document.getElementById('param4').value); // 持有年数
+    var dataInput = document.getElementById('dataInput').value;
+
+    // CAGR = (最终净值/初始净值)^(1/持有年数) - 1
+    var cagr = Math.pow(p2 / p1, 1 / p4) - 1;
+    var cagrPct = (cagr * 100).toFixed(2) + '%';
+
+    // Calmar比率 = CAGR / |最大回撤%|
+    var maxDrawdown = Math.abs(p3) / 100;
+    var calmar = cagr / maxDrawdown;
+    var calmarStr = calmar.toFixed(2);
+
+    var results = 'CAGR: ' + cagrPct + '\n最大回撤: ' + p3.toFixed(2) + '%\nCalmar比率: ' + calmarStr;
+
+    // 年化波动率：从月度最大回撤序列计算
+    if (dataInput.trim()) {
+      var drawdowns = dataInput.split(',').map(function(d) {
+        return parseFloat(d.trim());
+      }).filter(function(d) {
+        return !isNaN(d);
+      });
+
+      if (drawdowns.length > 1) {
+        var mean = drawdowns.reduce(function(sum, d) { return sum + d; }, 0) / drawdowns.length;
+        var variance = drawdowns.reduce(function(sum, d) { return sum + Math.pow(d - mean, 2); }, 0) / (drawdowns.length - 1);
+        var monthlyVol = Math.sqrt(variance);
+        var annualVol = monthlyVol * Math.sqrt(12);
+        results += '\n年化波动率: ' + (annualVol * 100).toFixed(2) + '%';
+      }
+    }
+
+    document.getElementById('resultValue').textContent = results;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

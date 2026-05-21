@@ -72,12 +72,136 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var dataInput = document.getElementById('dataInput').value.trim();
+    var method = document.getElementById('param2').value.toLowerCase().trim();
+
+    // 解析数据：按换行分割，每行是一个资产的收益率序列
+    var lines = dataInput.split('\n');
+    var assets = [];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (line) {
+        var values = line.split(',').map(function(v) { return parseFloat(v.trim()); });
+        if (values.some(isNaN)) {
+          document.getElementById('resultValue').textContent = '错误：数据包含无效数字';
+          document.getElementById('resultBox').classList.add('show');
+          return;
+        }
+        assets.push(values);
+      }
+    }
+
+    var n = assets.length;
+    if (n === 0) {
+      document.getElementById('resultValue').textContent = '错误：没有有效数据';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    // 确保所有序列长度一致，取最短长度
+    var seqLength = Math.min.apply(null, assets.map(function(a) { return a.length; }));
+    var data = assets.map(function(a) { return a.slice(0, seqLength); });
+
+    var result;
+    if (method === 'pearson') {
+      result = pearsonMatrix(data);
+    } else if (method === 'spearman') {
+      result = spearmanMatrix(data);
+    } else if (method === 'kendall') {
+      result = kendallMatrix(data);
+    } else {
+      document.getElementById('resultValue').textContent = '错误：支持 pearson/spearman/kendall';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    // 格式化输出
+    var label = method.charAt(0).toUpperCase() + method.slice(1) + ' 相关矩阵:';
+    var lines_out = [label];
+    for (var i = 0; i < result.length; i++) {
+      var row = result[i].map(function(v) { return v.toFixed(3).padStart(5, ' '); }).join(' ');
+      lines_out.push(row);
+    }
+
+    document.getElementById('resultValue').textContent = lines_out.join('\n');
     document.getElementById('resultBox').classList.add('show');
+  }
+
+  function pearsonMatrix(data) {
+    var n = data.length;
+    var matrix = [];
+    for (var i = 0; i < n; i++) {
+      matrix[i] = [];
+      for (var j = 0; j < n; j++) {
+        matrix[i][j] = pearsonCorr(data[i], data[j]);
+      }
+    }
+    return matrix;
+  }
+
+  function pearsonCorr(x, y) {
+    if (x.length !== y.length) return NaN;
+    var n = x.length;
+    var meanX = mean(x), meanY = mean(y);
+    var cov = 0, varX = 0, varY = 0;
+    for (var i = 0; i < n; i++) {
+      var dx = x[i] - meanX, dy = y[i] - meanY;
+      cov += dx * dy;
+      varX += dx * dx;
+      varY += dy * dy;
+    }
+    if (varX === 0 || varY === 0) return 0;
+    return cov / Math.sqrt(varX * varY);
+  }
+
+  function mean(arr) {
+    return arr.reduce(function(s, v) { return s + v; }, 0) / arr.length;
+  }
+
+  function spearmanMatrix(data) {
+    var n = data.length;
+    var ranked = data.map(function(seq) { return rank(seq); });
+    return pearsonMatrix(ranked);
+  }
+
+  function rank(seq) {
+    var indexed = seq.map(function(v, i) { return { v: v, i: i }; });
+    indexed.sort(function(a, b) { return a.v - b.v; });
+    var ranks = new Array(seq.length);
+    for (var i = 0; i < indexed.length; i++) {
+      ranks[indexed[i].i] = i + 1;
+    }
+    return ranks;
+  }
+
+  function kendallMatrix(data) {
+    var n = data.length;
+    var matrix = [];
+    for (var i = 0; i < n; i++) {
+      matrix[i] = [];
+      for (var j = 0; j < n; j++) {
+        matrix[i][j] = kendallTau(data[i], data[j]);
+      }
+    }
+    return matrix;
+  }
+
+  function kendallTau(x, y) {
+    if (x.length !== y.length) return NaN;
+    var n = x.length;
+    var totalPairs = n * (n - 1) / 2;
+    if (totalPairs === 0) return 1;
+    var concordant = 0, discordant = 0;
+    for (var i = 0; i < n; i++) {
+      for (var j = i + 1; j < n; j++) {
+        var dx = x[j] - x[i];
+        var dy = y[j] - y[i];
+        var product = dx * dy;
+        if (product > 0) concordant++;
+        else if (product < 0) discordant++;
+      }
+    }
+    return (concordant - discordant) / totalPairs;
   }
   </script>
 </body>

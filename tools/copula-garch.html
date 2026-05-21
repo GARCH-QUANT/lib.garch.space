@@ -82,9 +82,294 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function simulate() {
-    var n = parseInt(document.getElementById('n_assets').value);
-    var paths = parseInt(document.getElementById('n_paths').value);
-    document.getElementById('resultValue').textContent = n + ' 资产 × ' + paths + ' 路径已模拟';
+    // 解析参数
+    var n_assets = parseInt(document.getElementById('n_assets').value) || 2;
+    var copula_type = document.getElementById('copula_type').value;
+    var garch_model = document.getElementById('garch_model').value;
+    var n_paths = parseInt(document.getElementById('n_paths').value) || 1000;
+    var T = 252; // 年化步数
+
+    // 解析条件相关系数
+    var corrInput = document.getElementById('correlations').value;
+    var correlations = corrInput.split(',').map(function(x) { return parseFloat(x.trim()); });
+    while (correlations.length < n_assets * (n_assets - 1) / 2) {
+      correlations.push(0.4);
+    }
+    correlations = correlations.slice(0, n_assets * (n_assets - 1) / 2);
+
+    // 解析GARCH参数 (ω, α, β)
+    var paramsInput = document.getElementById('garch_params').value;
+    var paramsList = paramsInput.split(',').map(function(x) { return parseFloat(x.trim()); });
+    var garchParams = [];
+    for (var i = 0; i < n_assets; i++) {
+      if (paramsList.length >= 3) {
+        garchParams.push({ omega: paramsList[0], alpha: paramsList[1], beta: paramsList[2] });
+      } else {
+        garchParams.push({ omega: 0.01, alpha: 0.08, beta: 0.90 });
+      }
+    }
+
+    // 标准正态CDF (Φ)
+    function phi(z) {
+      var a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+      var a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+      var sign = z < 0 ? -1 : 1;
+      z = Math.abs(z) / Math.sqrt(2);
+      var t = 1 / (1 + p * z);
+      var y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
+      return 0.5 * (1 + sign * y);
+    }
+
+    // 标准正态逆CDF (Φ⁻¹)
+    function phiInv(u) {
+      var a = [
+        -3.969683028665376e+01, 2.209460984245205e+02,
+        -2.759285104469687e+02, 1.383577518672690e+02,
+        -3.066479806614716e+01, 2.506628277459239e+00
+      ];
+      var b = [
+        -5.447609879822406e+01, 1.615858368580409e+02,
+        -1.556989798598866e+02, 6.680131188771972e+01,
+        -1.328068155288572e+01
+      ];
+      var c = [
+        -7.784894002430293e-03, -3.223964580411365e-01,
+        -2.400758277161838e+00, -2.549732539343734e+00,
+        4.374664141464968e+00, 2.938163982698783e+00
+      ];
+      var d = [
+        7.784695709041462e-03, 3.224671290700398e-01,
+        2.445134137142996e+00, 3.754408661907416e+00
+      ];
+      var pLow = 0.02425, pHigh = 1 - pLow;
+      var q, r;
+      if (u <= 0 || u >= 1) return NaN;
+      if (u < pLow) {
+        q = Math.sqrt(-2 * Math.log(u));
+        return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+               ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+      } else if (u <= pHigh) {
+        q = u - 0.5;
+        r = q * q;
+        return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+               (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+      } else {
+        q = Math.sqrt(-2 * Math.log(1 - u));
+        return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+                ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+      }
+    }
+
+    // 均匀随机数
+    function uniformRandom() {
+      return Math.random();
+    }
+
+    // Box-Muller生成标准正态随机数
+    function normalRandom() {
+      var u1 = uniformRandom(), u2 = uniformRandom();
+      return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    }
+
+    // 构建相关矩阵 (首行首列相关，其他对称)
+    function buildCorrMatrix(n, corrs) {
+      var R = [];
+      for (var i = 0; i < n; i++) {
+        R[i] = [];
+        for (var j = 0; j < n; j++) {
+          if (i === j) R[i][j] = 1;
+          else if (i === 0) R[i][j] = corrs[j - 1] || 0.4;
+          else if (j === 0) R[i][j] = corrs[i - 1] || 0.4;
+          else R[i][j] = 0.5;
+        }
+      }
+      return R;
+    }
+
+    // Cholesky分解
+    function cholesky(A) {
+      var n = A.length;
+      var L = [];
+      for (var i = 0; i < n; i++) {
+        L[i] = [];
+        for (var j = 0; j < n; j++) L[i][j] = 0;
+        for (var j = 0; j <= i; j++) {
+          var s = 0;
+          for (var k = 0; k < j; k++) s += L[i][k] * L[j][k];
+          if (i === j) L[i][j] = Math.sqrt(Math.max(A[i][i] - s, 1e-10));
+          else L[i][j] = (A[i][j] - s) / L[j][j];
+        }
+      }
+      return L;
+    }
+
+    // Gaussian Copula: 生成相关均匀随机数
+    function gaussianCopula(n, R) {
+      var L = cholesky(R);
+      var Z = [];
+      for (var i = 0; i < n; i++) {
+        var zi = [];
+        for (var j = 0; j < R.length; j++) {
+          var z = normalRandom();
+          for (var k = 0; k <= j; k++) z += L[j][k] * normalRandom();
+          zi.push(z);
+        }
+        Z.push(zi);
+      }
+      var U = Z.map(function(row) { return row.map(function(z) { return phi(z); }); });
+      return U;
+    }
+
+    // t-Copula: 生成相关t随机数
+    function tCopula(n, R, nu) {
+      var L = cholesky(R);
+      var U = [];
+      for (var i = 0; i < n; i++) {
+        var zi = [];
+        for (var j = 0; j < R.length; j++) {
+          var z = normalRandom();
+          for (var k = 0; k <= j; k++) z += L[j][k] * normalRandom();
+          zi.push(z);
+        }
+        var s = 0;
+        for (var k = 0; k < nu; k++) s += normalRandom() * normalRandom();
+        var chi2 = s;
+        var t = zi.map(function(x) { return x / Math.sqrt(chi2 / nu); });
+        U.push(t.map(function(x) {
+          // t-CDF近似
+          var u = phi(x);
+          return u;
+        }));
+      }
+      return U;
+    }
+
+    // Clayton Copula: 逆方法生成
+    function claytonCopula(n, theta) {
+      var U = [];
+      for (var i = 0; i < n; i++) {
+        var ui = [];
+        for (var j = 0; j < 2; j++) {
+          var v = uniformRandom();
+          var u = Math.pow(1 - Math.pow(v, -theta / (1 + theta)), 1 / theta);
+          ui.push(u);
+        }
+        U.push(ui);
+      }
+      return U;
+    }
+
+    // Gumbel Copula: 近似生成
+    function gumbelCopula(n, theta) {
+      var U = [];
+      for (var i = 0; i < n; i++) {
+        var ui = [];
+        for (var j = 0; j < 2; j++) {
+          var v = uniformRandom();
+          var u = Math.exp(-Math.pow(-Math.log(v), 1 / theta));
+          ui.push(u);
+        }
+        U.push(ui);
+      }
+      return U;
+    }
+
+    // GARCH(1,1) 模拟路径，返回终值
+    function simulateGarch(params, T) {
+      var omega = params.omega, alpha = params.alpha, beta = params.beta;
+      var sigma2 = 0.01; // 初始方差
+      var r = 0;
+      for (var t = 0; t < T; t++) {
+        var z = normalRandom();
+        r += z * Math.sqrt(sigma2);
+        sigma2 = omega + alpha * sigma2 * z * z + beta * sigma2;
+      }
+      return r;
+    }
+
+    // 计算终值统计
+    var finalValues = [];
+    for (var a = 0; a < n_assets; a++) {
+      finalValues.push([]);
+    }
+
+    // 构建相关矩阵
+    var R = buildCorrMatrix(n_assets, correlations);
+
+    // 生成Copula样本
+    var copulaSamples;
+    if (copula_type === 'gaussian') {
+      copulaSamples = gaussianCopula(n_paths, R);
+    } else if (copula_type === 't') {
+      copulaSamples = tCopula(n_paths, R, 8);
+    } else if (copula_type === 'clayton') {
+      copulaSamples = claytonCopula(n_paths, 3);
+    } else if (copula_type === 'gumbel') {
+      copulaSamples = gumbelCopula(n_paths, 2);
+    } else {
+      copulaSamples = gaussianCopula(n_paths, R);
+    }
+
+    // 模拟每条路径
+    for (var p = 0; p < n_paths; p++) {
+      for (var a = 0; a < n_assets; a++) {
+        var pathReturn = simulateGarch(garchParams[a], T);
+        finalValues[a].push(pathReturn);
+      }
+    }
+
+    // 计算统计量
+    function calcStats(arr) {
+      var n = arr.length;
+      var mean = 0;
+      for (var i = 0; i < n; i++) mean += arr[i];
+      mean /= n;
+      var std = 0;
+      for (var i = 0; i < n; i++) std += (arr[i] - mean) * (arr[i] - mean);
+      std = Math.sqrt(std / n);
+      return { mean: mean, std: std };
+    }
+
+    var means = [], stds = [];
+    for (var a = 0; a < n_assets; a++) {
+      var s = calcStats(finalValues[a]);
+      means.push(s.mean.toFixed(2));
+      stds.push(s.std.toFixed(2));
+    }
+
+    // 计算下尾相关系数 (下10%分位数)
+    function calcTailDep(U, threshold) {
+      var count = 0, total = 0;
+      var n = U.length;
+      for (var i = 0; i < n; i++) {
+        for (var j = i + 1; j < n; j++) {
+          if (U[i][0] < threshold && U[j][1] < threshold) count++;
+          total++;
+        }
+      }
+      return total > 0 ? count / total : 0;
+    }
+
+    var lowerTail = calcTailDep(copulaSamples.slice(0, Math.min(n_paths, 500)), 0.1).toFixed(3);
+    var upperTail = calcTailDep(copulaSamples.slice(0, Math.min(n_paths, 500)).map(function(x) {
+      return x.map(function(u) { return 1 - u; });
+    }), 0.1).toFixed(3);
+
+    // 输出结果
+    var copulaNames = { gaussian: 'Gaussian', t: 'Student-t', clayton: 'Clayton', gumbel: 'Gumbel' };
+    var output = '边缘分布 GARCH(1,1) 参数:\n';
+    for (var a = 0; a < n_assets; a++) {
+      output += '  资产' + (a + 1) + ': ω=' + garchParams[a].omega + ', α=' + garchParams[a].alpha + ', β=' + garchParams[a].beta + '\n';
+    }
+    output += 'Copula 类型: ' + (copulaNames[copula_type] || 'Gaussian') + '\n';
+    output += '条件相关系数: [' + correlations.slice(0, n_assets).map(function(x) { return x.toFixed(2); }).join(', ') + ']\n';
+    output += '模拟路径数: ' + n_paths + '\n';
+    output += '终值均值: [' + means.join(', ') + ']\n';
+    output += '终值标准差: [' + stds.join(', ') + ']\n';
+    output += '下尾相关系数: ' + lowerTail + '\n';
+    output += '上尾相关系数: ' + upperTail;
+
+    document.getElementById('resultValue').textContent = output;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

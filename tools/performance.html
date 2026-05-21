@@ -69,11 +69,71 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var p1 = parseFloat(document.getElementById('param1').value) || 0;
+    var p2 = parseFloat(document.getElementById('param2').value) || 0;
+    var p3 = parseFloat(document.getElementById('param3').value) || 0;
+    var p4 = parseFloat(document.getElementById('param4').value) || 0;
+    var dataInput = document.getElementById('dataInput').value;
+
+    var sharpe = p2 !== 0 ? (p1 / p2) : 0;
+    var sortino = p3 !== 0 ? (p1 / p3) : 0;
+    var calmar = p4 !== 0 ? (p1 / p4) : 0;
+
+    var data = [];
+    if (dataInput.trim()) {
+      data = dataInput.split(',').map(function(v) { return parseFloat(v); }).filter(function(v) { return !isNaN(v); });
+    }
+
+    var winRate = 0, avgReturn = 0;
+    if (data.length > 0) {
+      var positiveCount = 0;
+      var sum = 0;
+      var downStdev = 0;
+      for (var i = 0; i < data.length; i++) {
+        sum += data[i];
+        if (data[i] > 0) positiveCount++;
+      }
+      avgReturn = sum / data.length;
+      winRate = (positiveCount / data.length) * 100;
+
+      var downData = [];
+      for (var j = 0; j < data.length; j++) {
+        if (data[j] < 0) downData.push(data[j]);
+      }
+      if (downData.length > 0) {
+        var downMean = 0;
+        for (var k = 0; k < downData.length; k++) downMean += downData[k];
+        downMean /= downData.length;
+        var downVar = 0;
+        for (var l = 0; l < downData.length; l++) {
+          downVar += Math.pow(downData[l] - downMean, 2);
+        }
+        downVar /= downData.length;
+        var downSD = Math.sqrt(downVar);
+        sortino = downSD !== 0 ? (avgReturn / downSD) : 0;
+      }
+    }
+
+    var infoRatio = 0;
+    if (data.length > 0) {
+      var meanR = avgReturn / 100;
+      var variance = 0;
+      for (var m = 0; m < data.length; m++) {
+        variance += Math.pow(data[m] / 100 - meanR, 2);
+      }
+      variance /= data.length;
+      var stdR = Math.sqrt(variance);
+      infoRatio = stdR !== 0 ? (meanR / stdR) * Math.sqrt(12) : 0;
+    }
+
+    var result = '夏普比率: ' + sharpe.toFixed(2) + '\n';
+    result += '索提诺比率: ' + sortino.toFixed(2) + '\n';
+    result += '卡玛比率: ' + calmar.toFixed(2) + '\n';
+    result += 'Sortino比率: ' + sortino.toFixed(2) + '\n';
+    result += '胜率: ' + winRate.toFixed(1) + '%\n';
+    result += '平均超额收益: ' + avgReturn.toFixed(2) + '%';
+
+    document.getElementById('resultValue').textContent = result;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>

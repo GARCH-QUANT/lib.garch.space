@@ -69,12 +69,64 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    try {
+    var conf = parseFloat(document.getElementById('param1').value) || 0.95;
+    var N = parseInt(document.getElementById('param2').value) || 1;
+    var omega = parseFloat(document.getElementById('param3').value) || 0.01;
+    var alpha = parseFloat(document.getElementById('param4').value) || 0.08;
+    var dataStr = document.getElementById('dataInput').value;
+    
+    var returns = dataStr.split(',').map(function(s) { return parseFloat(s.trim()); });
+    
+    if (returns.length === 0 || returns.some(isNaN)) {
+      document.getElementById('resultValue').textContent = '请输入有效的收益率数据';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+    
+    var n = returns.length;
+    var sum = 0;
+    for (var i = 0; i < n; i++) { sum += returns[i]; }
+    var mean = sum / n;
+    
+    var sqDiffSum = 0;
+    for (var i = 0; i < n; i++) { sqDiffSum += Math.pow(returns[i] - mean, 2); }
+    var stdDev = Math.sqrt(sqDiffSum / n);
+    
+    var beta = 1 - omega - alpha;
+    if (beta <= 0) { beta = 0.85; }
+    
+    var longTermVar = omega / (1 - alpha - beta);
+    var longTermVol = Math.sqrt(longTermVar);
+    
+    var h = longTermVar;
+    for (var i = 0; i < n; i++) {
+      var r = returns[i];
+      h = omega + alpha * r * r + beta * h;
+    }
+    
+    var zScore = (conf >= 0.99) ? 2.326 : 1.645;
+    var dailyVar = -zScore * Math.sqrt(h);
+    var nDayVar = dailyVar * Math.sqrt(N);
+    var cvar = dailyVar * (conf / (1 - conf));
+    var nDayCvar = nDayVar * (conf / (1 - conf));
+    
+    var annualizedVol = longTermVol * Math.sqrt(252) * 100;
+    var confPct = Math.round(conf * 100);
+    
+    var lines = [];
+    lines.push('\u6761\u4ef6\u6ce2\u52a8\u7387(\u5e74\u5316): ' + annualizedVol.toFixed(2) + '%');
+    lines.push('\u65e5 VaR (' + confPct + '%): ' + dailyVar.toFixed(2));
+    lines.push('\u65e5 CVaR (' + confPct + '%): ' + cvar.toFixed(2));
+    lines.push(N + '\u5929 VaR: ' + nDayVar.toFixed(2));
+    lines.push(N + '\u5929 CVaR: ' + nDayCvar.toFixed(2));
+    
+    document.getElementById('resultValue').textContent = lines.join('\n');
     document.getElementById('resultBox').classList.add('show');
+    } catch (e) {
+    document.getElementById('resultValue').textContent = '\u9519\u8bef: ' + e.message;
+    document.getElementById('resultBox').classList.add('show');
+  }
   }
   </script>
 </body>

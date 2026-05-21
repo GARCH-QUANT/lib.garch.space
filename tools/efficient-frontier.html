@@ -69,11 +69,210 @@
   <script src="/assets/js/theme.js"></script>
   <script>
   function calculate() {
-    var p1 = document.getElementById('param1').value;
-    var p2 = document.getElementById('param2').value;
-    var p3 = document.getElementById('param3').value;
-    var p4 = document.getElementById('param4').value;
-    document.getElementById('resultValue').textContent = '参数已记录: ' + p1 + ' / ' + p2 + ' / ' + p3 + ' / ' + p4;
+    var rf = parseFloat(document.getElementById('param1').value) || 3;
+    var maxRet = parseFloat(document.getElementById('param2').value) || 25;
+    var N = parseInt(document.getElementById('param3').value) || 50;
+    var seed = parseInt(document.getElementById('param4').value) || 42;
+    var dataInput = document.getElementById('dataInput').value;
+
+    // 1. Parse expected returns
+    var mu = dataInput.split(',').map(function(x) { return parseFloat(x.trim()); }).filter(function(x) { return !isNaN(x); });
+    var n = mu.length;
+    if (n < 2) {
+      document.getElementById('resultValue').textContent = '需要至少2个资产预期收益率';
+      document.getElementById('resultBox').classList.add('show');
+      return;
+    }
+
+    // 2. LCG for pseudo-random numbers (seed=42)
+    var lcg = (function(s) {
+      var m = 134456, a = 8121, c = 28411;
+      var state = s;
+      return function() {
+        state = (a * state + c) % m;
+        return state / m;
+      };
+    })(seed);
+
+    // 3. Generate volatilities (0.1 ~ 0.3)
+    var sigma = [];
+    for (var i = 0; i < n; i++) {
+      sigma.push(0.1 + lcg() * 0.2);
+    }
+
+    // 4. Generate positive definite correlation matrix
+    var corr = [];
+    for (var i = 0; i < n; i++) {
+      corr[i] = [];
+      for (var j = 0; j < n; j++) {
+        if (i === j) {
+          corr[i][j] = 1;
+        } else if (j < i) {
+          corr[i][j] = corr[j][i];
+        } else {
+          var val = lcg() * 1.4 - 0.2; // range approx -0.2 to 1.2
+          val = Math.max(-0.5, Math.min(0.95, val));
+          corr[i][j] = val;
+        }
+      }
+    }
+
+    // Make it positive definite via nearest valid matrix
+    for (var k = 0; k < 3; k++) {
+      for (var i = 0; i < n; i++) {
+        var sum = 0;
+        for (var j = 0; j < n; j++) {
+          if (i !== j) sum += Math.abs(corr[i][j]);
+        }
+        if (sum > 0.9) {
+          var scale = 0.9 / sum;
+          for (var j = 0; j < n; j++) {
+            if (i !== j) corr[i][j] *= scale;
+          }
+        }
+      }
+    }
+
+    // 5. Build covariance matrix Σ = diag(sigma) * corr * diag(sigma)
+    var cov = [];
+    for (var i = 0; i < n; i++) {
+      cov[i] = [];
+      for (var j = 0; j < n; j++) {
+        cov[i][j] = sigma[i] * sigma[j] * corr[i][j];
+      }
+    }
+
+    // 6. Generate N target return points
+    var minRet = Math.min.apply(null, mu);
+    var retPoints = [];
+    for (var i = 0; i < N; i++) {
+      retPoints.push(minRet + (maxRet - minRet) * i / (N - 1));
+    }
+
+    // 7. For each target return, solve min w'Σw s.t. w'μ=μ_target, w'1=1
+    // Using Lagrange multiplier method for 2 constraints
+    function solveFrontier(targetRet) {
+      // Build system: [2Σ  μ  1; μ' 0 0; 1' 0 0] * [w; λ1; λ2] = [0; targetRet; 1]
+      var size = n + 2;
+      var A = [];
+      for (var i = 0; i < size; i++) {
+        A[i] = [];
+        for (var j = 0; j < size; j++) {
+          A[i][j] = 0;
+        }
+      }
+      for (var i = 0; i < n; i++) {
+        for (var j = 0; j < n; j++) {
+          A[i][j] = 2 * cov[i][j];
+        }
+      }
+      for (var i = 0; i < n; i++) {
+        A[i][n] = mu[i];
+        A[i][n + 1] = 1;
+        A[n][i] = mu[i];
+        A[n + 1][i] = 1;
+      }
+
+      var b = [];
+      for (var i = 0; i < n; i++) b.push(0);
+      b.push(targetRet);
+      b.push(1);
+
+      // Gaussian elimination
+      var M = [];
+      for (var i = 0; i < size; i++) {
+        M[i] = [];
+        for (var j = 0; j < size; j++) {
+          M[i][j] = A[i][j];
+        }
+        M[i][size] = b[i];
+      }
+
+      for (var col = 0; col < size; col++) {
+        var maxRow = col;
+        for (var row = col + 1; row < size; row++) {
+          if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+        }
+        var tmp = M[col]; M[col] = M[maxRow]; M[maxRow] = tmp;
+        if (Math.abs(M[col][col]) < 1e-12) continue;
+        for (var row = col + 1; row < size; row++) {
+          var factor = M[row][col] / M[col][col];
+          for (var k = col; k <= size; k++) {
+            M[row][k] -= factor * M[col][k];
+          }
+        }
+      }
+
+      var x = [];
+      for (var i = 0; i < size; i++) x.push(0);
+      for (var row = size - 1; row >= 0; row--) {
+        x[row] = M[row][size];
+        for (var col = row + 1; col < size; col++) {
+          x[row] -= M[row][col] * x[col];
+        }
+        if (Math.abs(M[row][row]) > 1e-12) {
+          x[row] /= M[row][row];
+        }
+      }
+
+      var w = x.slice(0, n);
+      return w;
+    }
+
+    // Compute frontier points
+    var frontierPoints = [];
+    for (var i = 0; i < retPoints.length; i++) {
+      var w = solveFrontier(retPoints[i]);
+      var valid = true;
+      var portRet = 0, portVar = 0;
+      for (var j = 0; j < n; j++) {
+        if (isNaN(w[j]) || w[j] < -0.5 || w[j] > 2) {
+          valid = false;
+          break;
+        }
+        portRet += w[j] * mu[j];
+      }
+      if (!valid) continue;
+      for (var j = 0; j < n; j++) {
+        for (var k = 0; k < n; k++) {
+          portVar += w[j] * w[k] * cov[j][k];
+        }
+      }
+      frontierPoints.push({
+        ret: portRet,
+        vol: Math.sqrt(portVar),
+        weights: w
+      });
+    }
+
+    // 8. Find minimum variance portfolio
+    var minVol = Infinity, minVolRet = 0, minVolIdx = 0;
+    for (var i = 0; i < frontierPoints.length; i++) {
+      if (frontierPoints[i].vol < minVol) {
+        minVol = frontierPoints[i].vol;
+        minVolRet = frontierPoints[i].ret;
+        minVolIdx = i;
+      }
+    }
+
+    // 9. Find maximum Sharpe portfolio
+    var maxSharpe = -Infinity, maxSharpeRet = 0, maxSharpeVol = 0;
+    for (var i = 0; i < frontierPoints.length; i++) {
+      var sharpe = (frontierPoints[i].ret - rf) / frontierPoints[i].vol;
+      if (sharpe > maxSharpe) {
+        maxSharpe = sharpe;
+        maxSharpeRet = frontierPoints[i].ret;
+        maxSharpeVol = frontierPoints[i].vol;
+      }
+    }
+
+    var output = '最小方差组合收益: ' + minVolRet.toFixed(2) + '%\n';
+    output += '最小方差组合波动率: ' + (minVol * 100).toFixed(2) + '%\n';
+    output += '最大夏普组合收益: ' + maxSharpeRet.toFixed(2) + '%\n';
+    output += '最大夏普组合波动率: ' + (maxSharpeVol * 100).toFixed(2) + '%\n';
+    output += '有效前沿点数: ' + frontierPoints.length;
+
+    document.getElementById('resultValue').textContent = output;
     document.getElementById('resultBox').classList.add('show');
   }
   </script>
