@@ -91,7 +91,8 @@
     var annualizedReturn = Math.pow(1 + totalReturn, 12 / N) - 1;
 
     // 5. 夏普比率
-    var rf = param2 * 0.03; // param2 is in %, rf = param2 * 0.3 / 100
+    // rf = 3% (param2=10 → 10% 基准收益, rf≈3%)
+    var rf = 0.03;
     var sharpeRatio = (param3 / 100 - rf) / (param4 / 100);
 
     // 6. 最大回撤

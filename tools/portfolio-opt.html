@@ -198,7 +198,7 @@
     var minVarWeights = w.slice();
 
     // 最大夏普比率组合 (网格搜索)
-    var rf = p3;
+    var rf = p3 / 100; // 无风险利率从百分比转为小数
     var mu = returns;
 
     // 有效前沿搜索

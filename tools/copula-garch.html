@@ -105,7 +105,8 @@
       if (paramsList.length >= 3) {
         garchParams.push({ omega: paramsList[0], alpha: paramsList[1], beta: paramsList[2] });
       } else {
-        garchParams.push({ omega: 0.01, alpha: 0.08, beta: 0.90 });
+        // 典型 GARCH(1,1) 参数：omega 极小，由样本方差校准
+        garchParams.push({ omega: 0.000003, alpha: 0.08, beta: 0.91 });
       }
     }
 
@@ -274,17 +275,19 @@
       return U;
     }
 
-    // GARCH(1,1) 模拟路径，返回终值
+    // GARCH(1,1) 模拟路径，返回年化收益率
     function simulateGarch(params, T) {
       var omega = params.omega, alpha = params.alpha, beta = params.beta;
-      var sigma2 = 0.01; // 初始方差
+      var sigma2 = 0.04; // 初始方差（日波动率约20%）
       var r = 0;
       for (var t = 0; t < T; t++) {
         var z = normalRandom();
-        r += z * Math.sqrt(sigma2);
-        sigma2 = omega + alpha * sigma2 * z * z + beta * sigma2;
+        var ret = z * Math.sqrt(sigma2); // 条件收益率
+        r += ret;
+        sigma2 = omega + alpha * ret * ret + beta * sigma2;
+        sigma2 = Math.max(sigma2, 1e-10); // 防止数值崩溃
       }
-      return r;
+      return r / Math.sqrt(T); // 年化收益率（近似）
     }
 
     // 计算终值统计

@@ -131,8 +131,8 @@
         '终值标准差: ' + stdDev.toFixed(2) + '\n' +
         '5%分位数(P5): ' + p5.toFixed(2) + '\n' +
         '95%分位数(P95): ' + p95.toFixed(2) + '\n' +
-        '单日 VaR(5%): -' + VaR.toFixed(2) + '\n' +
-        'CVaR(5%): -' + CVaR.toFixed(2) + '\n' +
+        'T=' + T + '天 VaR(5%): -' + VaR.toFixed(2) + '\n' +
+        'T=' + T + '天 CVaR(5%): -' + CVaR.toFixed(2) + '\n' +
         '模拟误差: ±' + simError.toFixed(2);
     
     document.getElementById('resultValue').textContent = output;
