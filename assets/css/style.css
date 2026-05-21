@@ -541,6 +541,16 @@ body {
   text-align: center;
 }
 
+.footer-back {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-back:hover { color: var(--accent); }
+
 .footer-copy {
   color: rgba(255,255,255,0.6);
   font-size: 0.85rem;
